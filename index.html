@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI塔罗测算</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@auth0/auth0-spa-js@1.19.3/dist/umd/auth0-spa.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+    <!-- Background Effects Layer -->
+    <div class="bg-effects">
+        <div class="star-layer"></div>
+        <div class="glow-layer"></div>
+    </div>
+
+    <!-- History Sidebar -->
+    <div id="history-sidebar" class="sidebar collapsed">
+        <div class="sidebar-header">
+            <h3>📜 历史记录</h3>
+            <button id="close-sidebar" class="icon-btn">&times;</button>
+        </div>
+        <div id="history-list" class="history-list">
+            <!-- Items injected by JS -->
+            <div class="empty-history">暂无记录</div>
+        </div>
+    </div>
+
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebar-toggle" class="sidebar-toggle" title="查看历史">📜</button>
+
+    <header>
+        <h1>AI塔罗测算</h1>
+        <div class="auth-buttons">
+            <button id="settings-button" title="设置">⚙️ 设置</button>
+            <button id="login-button">登录/注册</button>
+            <button id="logout-button" style="display: none;">退出</button>
+        </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>设置</h2>
+            <div class="input-group">
+                <label for="deepseek-key">DeepSeek API Key:</label>
+                <input type="password" id="deepseek-key" placeholder="sk-...">
+            </div>
+            <button id="save-settings">保存</button>
+        </div>
+    </div>
+
+    <!-- AI Analysis Result Modal -->
+    <div id="analysis-modal" class="modal hidden">
+        <div class="modal-content large">
+            <span class="close-analysis">&times;</span>
+            <h2>🔮 AI 解牌结果</h2>
+            <div id="analysis-result" class="analysis-text">正在连接宇宙能量...</div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="controls-bar">
+            <div class="select-wrapper">
+                <label for="spread">选择塔罗牌阵：</label>
+                <select id="spread">
+                    <option value="1">选择之仇三张</option>
+                </select>
+            </div>
+            <button id="draw-card" disabled>抽取塔罗牌</button>
+            <button id="analyze-btn" style="display: none;" class="special-btn">🔮 AI 解读</button>
+        </div>
+
+        <div class="tarot-spread" id="tarot-container">
+            <!-- Slots for the spread -->
+            <div class="card-slot" data-index="0"></div>
+            <div class="card-slot" data-index="1"></div>
+            <div class="card-slot" data-index="2"></div>
+        </div>
+
+        <div class="deck-area">
+            <div class="deck-instruction">请凭直觉抽取 3 张牌</div>
+            <div id="deck-container" class="deck-fan">
+                <!-- 78 Cards will be generated here by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
