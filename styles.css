@@ -108,6 +108,18 @@ button {
     border-radius: 4px;
 }
 
+.auth-buttons {
+    position: relative;
+    z-index: 4000;
+    /* Ensure it is always interactive */
+    pointer-events: auto;
+}
+
+#settings-button {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
 button:hover:not(:disabled) {
     background: var(--accent-gold);
     color: var(--bg-dark);
@@ -389,15 +401,15 @@ select:focus {
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Hover Effect - disabled when dragging */
-.deck-area:not(.is-dragging) .deck-card:hover {
-    transform: translateY(-50px) scale(1.25);
-    z-index: 10;
-    box-shadow: 0 0 20px var(--accent-glow);
-    border-color: var(--accent-gold);
+/* Pre-selected state (First click) */
+.deck-card.pre-selected {
+    transform: translateY(-40px) scale(1.1) !important;
+    box-shadow: 0 0 25px var(--accent-gold);
+    border-color: #fff;
+    z-index: 100 !important;
 }
 
-/* Selected state */
+/* Selected/Drawn state (Second click) */
 .deck-card.selected {
     opacity: 0;
     pointer-events: none;
