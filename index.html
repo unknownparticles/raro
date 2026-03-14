@@ -84,8 +84,13 @@
                     <option value="career">事业路径五张</option>
                 </select>
             </div>
-            <button id="draw-card" disabled>抽取塔罗牌</button>
+            <button id="draw-card" disabled>开始抽牌</button>
             <button id="analyze-btn" style="display: none;" class="special-btn">🔮 AI 解读</button>
+        </div>
+        <div class="question-panel">
+            <label for="question-input">你想问什么？</label>
+            <textarea id="question-input" rows="3" placeholder="例如：我未来三个月是否适合换工作？"></textarea>
+            <div id="question-display" class="question-display hidden"></div>
         </div>
         <div id="spread-description" class="spread-description"></div>
 
@@ -93,7 +98,7 @@
             <!-- Slots for the spread -->
         </div>
 
-        <div class="deck-area">
+        <div class="deck-area hidden">
             <div id="deck-instruction" class="deck-instruction">请凭直觉抽取牌</div>
             <div id="deck-container" class="deck-fan">
                 <!-- 78 Cards will be generated here by JS -->

@@ -11,6 +11,8 @@ const spreadSelect = document.getElementById('spread');
 const tarotContainer = document.getElementById('tarot-container');
 const deckInstruction = document.getElementById('deck-instruction');
 const spreadDescription = document.getElementById('spread-description');
+const questionInput = document.getElementById('question-input');
+const questionDisplay = document.getElementById('question-display');
 
 const tarotCards = [
     // Major Arcana
@@ -115,10 +117,27 @@ const SPREADS = {
 let drawnCardsCount = 0;
 let preSelectedCard = null;
 let deckInteractionBound = false;
+let currentQuestion = '';
+let isQuestionLocked = false;
 
 function getSelectedSpread() {
     const spreadId = spreadSelect.value;
     return SPREADS[spreadId] || SPREADS.timeline;
+}
+
+function updateQuestionUI() {
+    questionInput.disabled = isQuestionLocked;
+    questionDisplay.classList.toggle('hidden', !isQuestionLocked);
+    questionDisplay.innerHTML = isQuestionLocked ? `<strong>本次问题：</strong> ${currentQuestion}` : '';
+    drawButton.innerText = isQuestionLocked ? '重置牌阵' : '开始抽牌';
+}
+
+function syncDeckVisibility() {
+    const deckArea = document.querySelector('.deck-area');
+    if (!deckArea) return;
+
+    const shouldShow = isQuestionLocked && drawnCardsCount < getSelectedSpread().cardCount;
+    deckArea.classList.toggle('hidden', !shouldShow);
 }
 
 function renderSpreadLayout() {
@@ -142,7 +161,9 @@ function renderSpreadLayout() {
     });
 
     spreadDescription.innerText = `${spread.name}：${spread.description}`;
-    deckInstruction.innerText = `请凭直觉抽取 ${spread.cardCount} 张牌`;
+    deckInstruction.innerText = isQuestionLocked
+        ? `请凭直觉抽取 ${spread.cardCount} 张牌`
+        : `请先输入问题，再抽取 ${spread.cardCount} 张牌`;
 }
 
 async function initAuth0() {
@@ -319,6 +340,7 @@ function clearPreSelectedCard() {
 
 function onCardClick(e) {
     const spread = getSelectedSpread();
+    if (!isQuestionLocked) return;
     if (drawnCardsCount >= spread.cardCount) return;
 
     const card = e.target.closest('.deck-card');
@@ -342,8 +364,7 @@ function onCardClick(e) {
     // Auto hide deck if full
     if (drawnCardsCount >= spread.cardCount) {
         setTimeout(() => {
-            const deckArea = document.querySelector('.deck-area');
-            if (deckArea) deckArea.classList.add('hidden');
+            syncDeckVisibility();
             updateAnalyzeButtonVisibility();
         }, 1000);
     }
@@ -492,29 +513,50 @@ function generateAndPlaceCard(slot) {
 function resetGame() {
     drawnCardsCount = 0;
     clearPreSelectedCard();
+    currentQuestion = '';
+    isQuestionLocked = false;
+    questionInput.value = '';
     renderSpreadLayout();
-
-    // Show deck again
-    const deckArea = document.querySelector('.deck-area');
-    if (deckArea) deckArea.classList.remove('hidden');
 
     // Hide Analyze Button
     const analyzeBtn = document.getElementById('analyze-btn');
     if (analyzeBtn) analyzeBtn.style.display = 'none';
 
+    updateQuestionUI();
+    syncDeckVisibility();
     initDeck();
+}
+
+function handleDrawButtonClick() {
+    if (isQuestionLocked) {
+        resetGame();
+        return;
+    }
+
+    const question = questionInput.value.trim();
+    if (!question) {
+        alert('请先输入你想占卜的问题');
+        questionInput.focus();
+        return;
+    }
+
+    currentQuestion = question;
+    isQuestionLocked = true;
+    clearPreSelectedCard();
+    renderSpreadLayout();
+    updateQuestionUI();
+    syncDeckVisibility();
+    updateAnalyzeButtonVisibility();
 }
 
 loginButton.addEventListener("click", login);
 logoutButton.addEventListener("click", logout);
-drawButton.addEventListener("click", resetGame);
+drawButton.addEventListener("click", handleDrawButtonClick);
 spreadSelect.addEventListener('change', () => {
     localStorage.setItem('selected_tarot_spread', spreadSelect.value);
     resetGame();
 });
 
-// Update draw text to 'Restart'
-drawButton.innerText = "重置牌阵";
 drawButton.disabled = true; // Disabled until Auth/Init finishes
 
 window.onload = () => {
@@ -523,6 +565,8 @@ window.onload = () => {
         spreadSelect.value = savedSpread;
     }
     renderSpreadLayout();
+    updateQuestionUI();
+    syncDeckVisibility();
     initAuth0();
     initDeck();
 };
@@ -604,7 +648,9 @@ function updateAnalyzeButtonVisibility() {
     const actionBtn = document.getElementById('analyze-btn');
     if (!actionBtn) return;
 
-    const shouldShow = drawnCardsCount >= getSelectedSpread().cardCount && hasProviderApiKey();
+    const shouldShow = isQuestionLocked
+        && drawnCardsCount >= getSelectedSpread().cardCount
+        && hasProviderApiKey();
     actionBtn.style.display = shouldShow ? 'inline-block' : 'none';
     actionBtn.classList.toggle('visible', shouldShow);
 }
@@ -756,6 +802,12 @@ newAnalyzeBtn.addEventListener('click', async () => {
         return;
     }
 
+    if (!currentQuestion) {
+        alert('请先输入你的问题，再开始抽牌');
+        questionInput.focus();
+        return;
+    }
+
     // Gather drawn cards
     const slots = document.querySelectorAll('.card-slot');
     let cardsData = [];
@@ -790,7 +842,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
         const dateStr = now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         saveHistory({
             date: dateStr,
-            summary: `${spread.name} · ${cardsData.map(card => `${card.name}[${card.position}/${card.orientation}]`).join(', ')}`,
+            summary: `问题：${currentQuestion} · ${spread.name}`,
             result: interpretation
         });
 
@@ -827,6 +879,8 @@ async function callAIProviderAPI(providerId, apiKey, spread, cards) {
     )).join('\n');
 
     const prompt = `你是一位精通神秘学的塔罗牌大师。请根据以下牌阵为求问者进行解读：
+
+求问者的问题：${currentQuestion}
 
 牌阵名称：${spread.name}
 牌阵说明：${spread.description}
