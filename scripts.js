@@ -16,24 +16,19 @@ const questionDisplay = document.getElementById('question-display');
 const deckArea = document.querySelector('.deck-area');
 
 const tarotCards = [
-    // Major Arcana
     'The Fool', 'The Magician', 'The High Priestess', 'The Empress', 'The Emperor', 'The Hierophant',
     'The Lovers', 'The Chariot', 'Strength', 'The Hermit', 'Wheel of Fortune', 'Justice',
     'The Hanged Man', 'Death', 'Temperance', 'The Devil', 'The Tower', 'The Star',
     'The Moon', 'The Sun', 'Judgement', 'The World',
-    // Wands
     'Ace of Wands', 'Two of Wands', 'Three of Wands', 'Four of Wands', 'Five of Wands',
     'Six of Wands', 'Seven of Wands', 'Eight of Wands', 'Nine of Wands', 'Ten of Wands',
     'Page of Wands', 'Knight of Wands', 'Queen of Wands', 'King of Wands',
-    // Cups
     'Ace of Cups', 'Two of Cups', 'Three of Cups', 'Four of Cups', 'Five of Cups',
     'Six of Cups', 'Seven of Cups', 'Eight of Cups', 'Nine of Cups', 'Ten of Cups',
     'Page of Cups', 'Knight of Cups', 'Queen of Cups', 'King of Cups',
-    // Swords
     'Ace of Swords', 'Two of Swords', 'Three of Swords', 'Four of Swords', 'Five of Swords',
     'Six of Swords', 'Seven of Swords', 'Eight of Swords', 'Nine of Swords', 'Ten of Swords',
     'Page of Swords', 'Knight of Swords', 'Queen of Swords', 'King of Swords',
-    // Pentacles
     'Ace of Pentacles', 'Two of Pentacles', 'Three of Pentacles', 'Four of Pentacles', 'Five of Pentacles',
     'Six of Pentacles', 'Seven of Pentacles', 'Eight of Pentacles', 'Nine of Pentacles', 'Ten of Pentacles',
     'Page of Pentacles', 'Knight of Pentacles', 'Queen of Pentacles', 'King of Pentacles'
@@ -171,7 +166,6 @@ function updateQuestionUI() {
 
 function syncDeckVisibility() {
     if (!deckArea) return;
-
     const shouldShow = isQuestionLocked && drawnCardsCount < getTargetDrawCount();
     deckArea.classList.toggle('hidden', !shouldShow);
 }
@@ -182,13 +176,11 @@ function updateDeckInstruction() {
         deckInstruction.innerText = `请先输入问题，再抽取 ${spread.cardCount} 张牌`;
         return;
     }
-
     if (clarificationRequested && !clarificationDrawn) {
         const focus = clarificationSuggestion?.focus || '当前最模糊的部分';
         deckInstruction.innerText = `建议补 1 张澄清牌：请围绕“${focus}”再抽一张未抽过的牌`;
         return;
     }
-
     deckInstruction.innerText = `请凭直觉抽取 ${spread.cardCount} 张牌`;
 }
 
@@ -204,7 +196,6 @@ function updateClarifierPanel(parsedResult = null) {
     } : null;
 
     if (!panel || !message || !button) return;
-
     if (!parsedResult || clarificationDrawn) {
         panel.classList.add('hidden');
         message.innerHTML = '';
@@ -231,12 +222,7 @@ function addClarificationSlot() {
     slot.dataset.index = String(getSelectedSpread().cardCount);
     slot.dataset.positionTitle = '澄清牌';
     slot.dataset.positionMeaning = focus;
-    slot.innerHTML = `
-        <div class="slot-placeholder">
-            <strong>澄清牌</strong>
-            <span>${focus}</span>
-        </div>
-    `;
+    slot.innerHTML = `<div class="slot-placeholder"><strong>澄清牌</strong><span>${focus}</span></div>`;
     tarotContainer.appendChild(slot);
     tarotContainer.dataset.cardCount = String(getTargetDrawCount());
 }
@@ -252,19 +238,11 @@ function renderSpreadLayout() {
         slot.dataset.index = String(index);
         slot.dataset.positionTitle = position.title;
         slot.dataset.positionMeaning = position.meaning;
-        slot.innerHTML = `
-            <div class="slot-placeholder">
-                <strong>${position.title}</strong>
-                <span>${position.meaning}</span>
-            </div>
-        `;
+        slot.innerHTML = `<div class="slot-placeholder"><strong>${position.title}</strong><span>${position.meaning}</span></div>`;
         tarotContainer.appendChild(slot);
     });
 
-    if (clarificationRequested || clarificationDrawn) {
-        addClarificationSlot();
-    }
-
+    if (clarificationRequested || clarificationDrawn) addClarificationSlot();
     spreadDescription.innerHTML = `<strong>${spread.name}</strong>：${spread.description}<br>${spread.suitableFor}`;
     updateDeckInstruction();
 }
@@ -278,8 +256,7 @@ async function initAuth0() {
             useRefreshTokens: true
         });
 
-        if (location.search.includes("state=") &&
-            (location.search.includes("code=") || location.search.includes("error="))) {
+        if (location.search.includes("state=") && (location.search.includes("code=") || location.search.includes("error="))) {
             await auth0Client.handleRedirectCallback();
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -298,7 +275,6 @@ async function initAuth0() {
         }
     } catch (e) {
         console.error("Auth0 initialization error:", e);
-        console.log("Running in offline/demo mode");
         drawButton.disabled = false;
     }
 }
@@ -306,23 +282,17 @@ async function initAuth0() {
 async function login() {
     try {
         if (!auth0Client) {
-            console.error("Auth0 client not initialized");
             alert("登录服务连接失败，已为您开启离线模式，可以直接抽牌。");
             return;
         }
-        await auth0Client.loginWithRedirect({
-            redirect_uri: window.location.href
-        });
+        await auth0Client.loginWithRedirect({ redirect_uri: window.location.href });
     } catch (e) {
-        console.error("Login error:", e);
         alert("登录出错: " + e.message);
     }
 }
 
 async function logout() {
-    await auth0Client.logout({
-        returnTo: window.location.href
-    });
+    await auth0Client.logout({ returnTo: window.location.href });
 }
 
 function initDeck() {
@@ -339,7 +309,6 @@ function initDeck() {
     const angleStep = fanAngle / (totalCards - 1);
 
     for (let i = 0; i < totalCards; i++) {
-        // Create Wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'deck-card-wrapper';
         const angle = startAngle + (i * angleStep);
@@ -359,31 +328,23 @@ function initDeck() {
         }
 
         wrapper.style.zIndex = i;
-
-        // Create Inner Card
         const card = document.createElement('div');
         card.className = 'deck-card';
         card.dataset.index = i;
         card.dataset.cardIndex = String(deckCardOrder[i]);
-
-        // Append inner to wrapper, wrapper to deck
         wrapper.appendChild(card);
         deckContainer.appendChild(wrapper);
-
-        // Event listener on the inner card
         card.addEventListener('click', onCardClick);
     }
 
     if (deckInteractionBound) return;
 
-    // Drag / Rotation Logic
     let isDragging = false;
     let startX = 0;
     let currentRotation = 0;
     let previousRotation = 0;
 
-    // Mouse Events
-    deckArea.addEventListener('mousedown', (e) => {
+    deckArea.addEventListener('mousedown', e => {
         if (isMobileDeckMode()) return;
         isDragging = true;
         deckArea.classList.add('is-dragging');
@@ -391,9 +352,8 @@ function initDeck() {
         deckArea.style.cursor = 'grabbing';
     });
 
-    window.addEventListener('mousemove', (e) => {
-        if (isMobileDeckMode()) return;
-        if (!isDragging) return;
+    window.addEventListener('mousemove', e => {
+        if (isMobileDeckMode() || !isDragging) return;
         const deltaX = e.clientX - startX;
         const rotationDelta = deltaX * 0.2;
         currentRotation = previousRotation + rotationDelta;
@@ -410,17 +370,15 @@ function initDeck() {
         }
     });
 
-    // Touch Events
-    deckArea.addEventListener('touchstart', (e) => {
+    deckArea.addEventListener('touchstart', e => {
         if (isMobileDeckMode()) return;
         isDragging = true;
         deckArea.classList.add('is-dragging');
         startX = e.touches[0].clientX;
     }, { passive: true });
 
-    window.addEventListener('touchmove', (e) => {
-        if (isMobileDeckMode()) return;
-        if (!isDragging) return;
+    window.addEventListener('touchmove', e => {
+        if (isMobileDeckMode() || !isDragging) return;
         const deltaX = e.touches[0].clientX - startX;
         const rotationDelta = deltaX * 0.2;
         currentRotation = previousRotation + rotationDelta;
@@ -438,13 +396,11 @@ function initDeck() {
 }
 
 function applyDeckRotation(rotationOffset) {
-    const wrappers = document.querySelectorAll('.deck-card-wrapper');
-    wrappers.forEach(wrapper => {
+    document.querySelectorAll('.deck-card-wrapper').forEach(wrapper => {
         if (wrapper.dataset.compact === 'true') {
             wrapper.style.transform = wrapper.dataset.baseTransform;
             return;
         }
-
         const baseAngle = parseFloat(wrapper.dataset.baseAngle);
         wrapper.style.transform = `rotate(${baseAngle + rotationOffset}deg)`;
     });
@@ -458,9 +414,7 @@ function clearPreSelectedCard() {
 }
 
 function onCardClick(e) {
-    if (!isQuestionLocked) return;
-    if (drawnCardsCount >= getTargetDrawCount()) return;
-
+    if (!isQuestionLocked || drawnCardsCount >= getTargetDrawCount()) return;
     const card = e.target.closest('.deck-card');
     if (!card || card.classList.contains('selected')) return;
 
@@ -473,14 +427,11 @@ function onCardClick(e) {
 
     clearPreSelectedCard();
     card.classList.add('selected');
-
     const slotIndex = drawnCardsCount;
     const cardIndex = Number(card.dataset.cardIndex);
     drawnCardsCount++;
-
     animateCardToSlot(card, slotIndex, cardIndex);
 
-    // Auto hide deck if full
     if (drawnCardsCount >= getTargetDrawCount()) {
         setTimeout(() => {
             syncDeckVisibility();
@@ -499,26 +450,17 @@ function animateCardToSlot(startElement, slotIndex, cardIndex) {
     const slot = document.querySelector(`.card-slot[data-index="${slotIndex}"]`);
     if (!slot) return;
 
-    // startElement is .deck-card
-    // wrapper is startElement.parentElement
     const wrapper = startElement.parentElement;
-
     const startRect = startElement.getBoundingClientRect();
     const slotRect = slot.getBoundingClientRect();
-
-    // Get rotation from the wrapper
     let initialTransform = 'rotate(0deg)';
-    if (wrapper && wrapper.style.transform) {
-        initialTransform = wrapper.style.transform;
-    }
+    if (wrapper && wrapper.style.transform) initialTransform = wrapper.style.transform;
 
     const flyingCard = document.createElement('div');
     flyingCard.className = 'flying-card';
     flyingCard.style.top = `${startRect.top}px`;
     flyingCard.style.left = `${startRect.left}px`;
     flyingCard.style.transform = initialTransform;
-
-    // Copy style
     flyingCard.style.backgroundImage = getComputedStyle(startElement).backgroundImage;
     flyingCard.style.backgroundSize = '100% 100%';
     flyingCard.style.backgroundRepeat = 'no-repeat';
@@ -527,15 +469,10 @@ function animateCardToSlot(startElement, slotIndex, cardIndex) {
     flyingCard.style.border = '1px solid #555';
     flyingCard.style.borderRadius = '6px';
     flyingCard.style.zIndex = 2000;
-    flyingCard.style.width = '90px'; // Match deck card size
+    flyingCard.style.width = '90px';
     flyingCard.style.height = '153px';
-
     document.body.appendChild(flyingCard);
-
-    // Force reflow
     flyingCard.getBoundingClientRect();
-
-    // Animate to slot
     flyingCard.style.top = `${slotRect.top}px`;
     flyingCard.style.left = `${slotRect.left}px`;
     flyingCard.style.width = `${slotRect.width}px`;
@@ -561,54 +498,41 @@ function generateAndPlaceCard(slot, cardIndex) {
 
     const cardInner = document.createElement('div');
     cardInner.className = 'card';
-
     const cardBack = document.createElement('div');
     cardBack.className = 'card-face card-back';
-
     const cardFront = document.createElement('div');
     cardFront.className = 'card-face card-front';
 
     const img = new Image();
-    // Use the 1-78 numbered naming convention
-    // randomIndex is 0-77, so we add 1 to get 1-78
     const imageIndex = cardIndex + 1;
     img.src = `tarot_images/Tarot_Card_${imageIndex}.webp`;
     img.alt = cardName;
     img.decoding = 'async';
     img.fetchPriority = 'high';
 
+    const chineseName = tarotTranslations[cardName] || cardName;
+    const positionText = isReversed ? '逆位' : '正位';
+
     img.onerror = () => {
         const fallbackDiv = document.createElement('div');
         fallbackDiv.className = 'card-fallback';
-
         const title = document.createElement('h3');
         title.innerText = chineseName;
         fallbackDiv.appendChild(title);
-
         const reversedLabel = document.createElement('div');
         reversedLabel.className = 'reversed-label';
         reversedLabel.innerText = positionText;
         fallbackDiv.appendChild(reversedLabel);
-
         cardFront.appendChild(fallbackDiv);
     };
 
-    if (isReversed) {
-        img.style.transform = 'rotate(180deg)';
-    }
-
-    const chineseName = tarotTranslations[cardName] || cardName;
-    const positionText = isReversed ? '逆位' : '正位';
-
-    img.onload = () => {
-        cardFront.appendChild(img);
-    };
+    if (isReversed) img.style.transform = 'rotate(180deg)';
+    img.onload = () => cardFront.appendChild(img);
 
     cardInner.appendChild(cardBack);
     cardInner.appendChild(cardFront);
     cardContainer.appendChild(cardInner);
 
-    // External Label for both image and fallback cases
     const labelDiv = document.createElement('div');
     labelDiv.className = 'card-label';
     labelDiv.innerHTML = `<strong>${chineseName}</strong><span class="label-position">${positionTitle}</span><span>${positionText}</span>`;
@@ -622,9 +546,7 @@ function generateAndPlaceCard(slot, cardIndex) {
 
     setTimeout(() => {
         cardInner.classList.add('flipped');
-        setTimeout(() => {
-            labelDiv.classList.add('visible');
-        }, 300);
+        setTimeout(() => labelDiv.classList.add('visible'), 300);
     }, 100);
 }
 
@@ -639,11 +561,8 @@ function resetGame() {
     clarificationRequested = false;
     clarificationDrawn = false;
     renderSpreadLayout();
-
-    // Hide Analyze Button
     const analyzeBtn = document.getElementById('analyze-btn');
     if (analyzeBtn) analyzeBtn.style.display = 'none';
-
     updateQuestionUI();
     syncDeckVisibility();
     updateClarifierPanel(null);
@@ -655,14 +574,12 @@ function handleDrawButtonClick() {
         resetGame();
         return;
     }
-
     const question = questionInput.value.trim();
     if (!question) {
         alert('请先输入你想占卜的问题');
         questionInput.focus();
         return;
     }
-
     currentQuestion = question;
     isQuestionLocked = true;
     clearPreSelectedCard();
@@ -684,21 +601,17 @@ spreadSelect.addEventListener('change', () => {
     resetGame();
 });
 
-drawButton.disabled = true; // Disabled until Auth/Init finishes
+drawButton.disabled = true;
 
 window.onload = () => {
     const savedSpread = localStorage.getItem('selected_tarot_spread');
-    if (savedSpread && SPREADS[savedSpread]) {
-        spreadSelect.value = savedSpread;
-    }
+    if (savedSpread && SPREADS[savedSpread]) spreadSelect.value = savedSpread;
     renderSpreadLayout();
     updateQuestionUI();
     syncDeckVisibility();
     initAuth0();
     initDeck();
 };
-
-// --- Settings & AI Analysis Logic ---
 
 const settingsBtn = document.getElementById('settings-button');
 const settingsModal = document.getElementById('settings-modal');
@@ -714,51 +627,16 @@ const closeAnalysis = document.querySelector('.close-analysis');
 const analysisResult = document.getElementById('analysis-result');
 const clarifierButton = document.getElementById('clarifier-button');
 
-const AI_PROVIDERS = {
-    deepseek: {
-        label: 'DeepSeek',
-        storageKey: 'provider_api_key_deepseek',
-        endpoint: 'https://api.deepseek.com/chat/completions',
-        model: 'deepseek-chat',
-        keyUrl: 'https://platform.deepseek.com/api_keys',
-        keyHint: '打开 DeepSeek 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
-    },
-    glm: {
-        label: 'GLM',
-        storageKey: 'provider_api_key_glm',
-        endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-        model: 'glm-4-flash',
-        keyUrl: 'https://bigmodel.cn/usercenter/proj-mgmt/apikeys',
-        keyHint: '打开智谱 BigModel 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
-    },
-    kimi: {
-        label: 'Kimi',
-        storageKey: 'provider_api_key_kimi',
-        endpoint: 'https://api.moonshot.cn/v1/chat/completions',
-        model: 'moonshot-v1-8k',
-        keyUrl: 'https://platform.moonshot.cn/console/api-keys',
-        keyHint: '打开 Moonshot 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
-    }
-};
-
-function migrateLegacySettings() {
-    const legacyDeepSeekKey = localStorage.getItem('deepseek_api_key');
-    if (legacyDeepSeekKey && !localStorage.getItem(AI_PROVIDERS.deepseek.storageKey)) {
-        localStorage.setItem(AI_PROVIDERS.deepseek.storageKey, legacyDeepSeekKey);
-    }
-}
-
-function getSelectedProvider() {
-    const savedProvider = localStorage.getItem('selected_ai_provider');
-    return AI_PROVIDERS[savedProvider] ? savedProvider : 'deepseek';
-}
-
-function getProviderApiKey(providerId = getSelectedProvider()) {
-    const provider = AI_PROVIDERS[providerId];
-    if (!provider) return '';
-
-    return localStorage.getItem(provider.storageKey) || '';
-}
+const {
+    AI_PROVIDERS,
+    migrateLegacySettings,
+    getSelectedProvider,
+    getProviderApiKey,
+    setProviderApiKey,
+    getHistory,
+    saveHistory,
+    callProvider
+} = window.TarotAIShared;
 
 function hasProviderApiKey(providerId = getSelectedProvider()) {
     return Boolean(getProviderApiKey(providerId));
@@ -772,46 +650,31 @@ function updateProviderInput() {
     const apiKey = getProviderApiKey(providerId);
     providerInput.value = apiKey;
     providerInput.placeholder = providerId === 'glm' ? '填写 GLM API Key' : 'sk-...';
-
     const label = document.querySelector('label[for="provider-key"]');
-    if (label) {
-        label.innerText = `${provider.label} API Key:`;
-    }
+    if (label) label.innerText = `${provider.label} API Key:`;
 
     if (providerHelp) {
-        providerHelp.innerHTML = `
-            <strong>${provider.label} 获取方式</strong>
-            <span>${provider.keyHint}</span>
-            <a href="${provider.keyUrl}" target="_blank" rel="noopener noreferrer">${provider.keyUrl}</a>
-        `;
+        providerHelp.innerHTML = `<strong>${provider.label} 获取方式</strong><span>${provider.keyHint}</span><a href="${provider.keyUrl}" target="_blank" rel="noopener noreferrer">${provider.keyUrl}</a>`;
     }
 }
 
 function updateAnalyzeButtonVisibility() {
     const actionBtn = document.getElementById('analyze-btn');
     if (!actionBtn) return;
-
-    const shouldShow = isQuestionLocked
-        && drawnCardsCount >= getSelectedSpread().cardCount
-        && hasProviderApiKey();
+    const shouldShow = isQuestionLocked && drawnCardsCount >= getSelectedSpread().cardCount && hasProviderApiKey();
     actionBtn.style.display = shouldShow ? 'inline-block' : 'none';
     actionBtn.classList.toggle('visible', shouldShow);
 }
 
 function openModal(modal) {
-    if (modal.hideTimer) {
-        clearTimeout(modal.hideTimer);
-        modal.hideTimer = null;
-    }
+    if (modal.hideTimer) clearTimeout(modal.hideTimer);
     modal.classList.remove('hidden');
     requestAnimationFrame(() => modal.classList.add('visible'));
 }
 
 function closeModal(modal) {
     modal.classList.remove('visible');
-    if (modal.hideTimer) {
-        clearTimeout(modal.hideTimer);
-    }
+    if (modal.hideTimer) clearTimeout(modal.hideTimer);
     modal.hideTimer = setTimeout(() => {
         modal.classList.add('hidden');
         modal.hideTimer = null;
@@ -828,37 +691,22 @@ function openSettingsModal() {
     });
 }
 
-// --- Sidebar & History Logic ---
-
 const sidebar = document.getElementById('history-sidebar');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const closeSidebar = document.getElementById('close-sidebar');
 const historyList = document.getElementById('history-list');
 
-// Toggle Sidebar
-sidebarToggle.addEventListener('click', () => {
-    sidebar.classList.remove('collapsed');
-});
+sidebarToggle.addEventListener('click', () => sidebar.classList.remove('collapsed'));
+closeSidebar.addEventListener('click', () => sidebar.classList.add('collapsed'));
 
-closeSidebar.addEventListener('click', () => {
-    sidebar.classList.add('collapsed');
-});
-
-// Load History on Init
 function initHistory() {
     renderHistoryList();
 }
 
 settingsBtn.addEventListener('click', openSettingsModal);
-
-closeSettings.addEventListener('click', () => {
-    closeModal(settingsModal);
-});
-
-settingsModal.addEventListener('click', (event) => {
-    if (event.target === settingsModal) {
-        closeModal(settingsModal);
-    }
+closeSettings.addEventListener('click', () => closeModal(settingsModal));
+settingsModal.addEventListener('click', event => {
+    if (event.target === settingsModal) closeModal(settingsModal);
 });
 
 providerSelect.addEventListener('change', () => {
@@ -873,64 +721,38 @@ saveSettingsBtn.addEventListener('click', () => {
     const apiKey = providerInput.value.trim();
 
     localStorage.setItem('selected_ai_provider', providerId);
-
-    if (apiKey) {
-        localStorage.setItem(provider.storageKey, apiKey);
-    } else {
-        localStorage.removeItem(provider.storageKey);
-    }
+    setProviderApiKey(providerId, apiKey);
 
     updateAnalyzeButtonVisibility();
     closeModal(settingsModal);
 });
 
-function getHistory() {
-    const history = localStorage.getItem('tarot_history');
-    return history ? JSON.parse(history) : [];
-}
-
-function saveHistory(item) {
-    const history = getHistory();
-    // Add new item to top
-    history.unshift(item);
-    // Limit to 50 items
-    if (history.length > 50) history.pop();
-    localStorage.setItem('tarot_history', JSON.stringify(history));
+function saveAndRenderHistory(item) {
+    saveHistory(item);
     renderHistoryList();
 }
 
 function renderHistoryList() {
     const history = getHistory();
     historyList.innerHTML = '';
-
     if (history.length === 0) {
         historyList.innerHTML = '<div class="empty-history">暂无记录</div>';
         return;
     }
 
-    history.forEach((item, index) => {
+    history.forEach(item => {
         const div = document.createElement('div');
         div.className = 'history-item';
-        div.innerHTML = `
-            <div class="history-date">${item.date}</div>
-            <div class="history-summary">${escapeHtml(item.summary)}</div>
-        `;
-        div.addEventListener('click', () => {
-            showAnalysis(item.result, true);
-        });
+        div.innerHTML = `<div class="history-date">${item.date}</div><div class="history-summary">${escapeHtml(item.summary)}</div>`;
+        div.addEventListener('click', () => showAnalysis(item.result, true));
         historyList.appendChild(div);
     });
 }
 
 function showAnalysis(markdownText, isHistory = false) {
     openModal(analysisModal);
-
-    // Parse Markdown
-    const htmlContent = marked.parse(markdownText);
-    analysisResult.innerHTML = htmlContent;
-    if (isHistory) {
-        updateClarifierPanel(null);
-    }
+    analysisResult.innerHTML = marked.parse(markdownText);
+    if (isHistory) updateClarifierPanel(null);
 }
 
 function getCurrentCardsData() {
@@ -948,7 +770,6 @@ function getCurrentCardsData() {
 function extractJsonFromText(text) {
     const fencedMatch = text.match(/```json\s*([\s\S]*?)```/i);
     if (fencedMatch) return fencedMatch[1].trim();
-
     const objectMatch = text.match(/\{[\s\S]*\}/);
     return objectMatch ? objectMatch[0] : text;
 }
@@ -962,7 +783,7 @@ function parseAIReadingResponse(rawText) {
             clarifierReason: parsed.clarifierReason || '',
             clarifierFocus: parsed.clarifierFocus || ''
         };
-    } catch (error) {
+    } catch {
         return {
             markdown: rawText,
             recommendClarifier: false,
@@ -971,16 +792,6 @@ function parseAIReadingResponse(rawText) {
         };
     }
 }
-
-// Modify Analyze Button Logic to use Markdown and History
-// We need to overwrite the previous event listener. 
-// Since we can't easily remove anonymous listeners, we'll just add a new one 
-// and logic will run twice if we aren't careful. 
-// IMPORTANT: In a real refactor we'd replace the function. 
-// Here, we will clone the node to strip old listeners or just accept the duplicate logic risk?
-// Better: We will replace the whole logic via override if possible.
-// Actually, since I appended the previous logic, I can just replace that block or 
-// use a flag. But cloning the node is safest to "reset" the button logic.
 
 const newAnalyzeBtn = analyzeBtn.cloneNode(true);
 analyzeBtn.parentNode.replaceChild(newAnalyzeBtn, analyzeBtn);
@@ -996,7 +807,6 @@ async function analyzeCurrentReading(isClarificationPass = false) {
         openSettingsModal();
         return;
     }
-
     if (!currentQuestion) {
         alert('请先输入你的问题，再开始抽牌');
         questionInput.focus();
@@ -1004,13 +814,11 @@ async function analyzeCurrentReading(isClarificationPass = false) {
     }
 
     const cardsData = getCurrentCardsData();
-
     if (cardsData.length < getTargetDrawCount()) {
         alert(`请先抽取完 ${getTargetDrawCount()} 张牌`);
         return;
     }
 
-    // Show Analysis Modal with loading state
     openModal(analysisModal);
     analysisResult.innerHTML = '<p>🔮 正在连接高维智慧，分析牌阵中...</p>';
     updateClarifierPanel(null);
@@ -1018,31 +826,24 @@ async function analyzeCurrentReading(isClarificationPass = false) {
     try {
         const interpretation = await callAIProviderAPI(providerId, apiKey, spread, cardsData, isClarificationPass);
         const parsedResult = parseAIReadingResponse(interpretation);
-
-        // Show Parsed Markdown
         showAnalysis(parsedResult.markdown);
         updateClarifierPanel(parsedResult);
 
-        // Save to History
         const now = new Date();
         const dateStr = now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        saveHistory({
+        saveAndRenderHistory({
             date: dateStr,
             summary: `问题：${currentQuestion} · ${spread.name}${isClarificationPass ? ' · 已补澄清牌' : ''}`,
             result: parsedResult.markdown
         });
-
     } catch (error) {
         analysisResult.innerHTML = `<p style="color: #ff6b6b;">连接中断: ${error.message}</p>`;
         updateClarifierPanel(null);
     }
 }
 
-newAnalyzeBtn.addEventListener('click', () => {
-    analyzeCurrentReading(false);
-});
+newAnalyzeBtn.addEventListener('click', () => analyzeCurrentReading(false));
 
-// Update window.onload to include initHistory
 const originalOnload = window.onload;
 window.onload = () => {
     if (originalOnload) originalOnload();
@@ -1051,13 +852,10 @@ window.onload = () => {
     updateAnalyzeButtonVisibility();
 };
 
-closeAnalysis.addEventListener('click', () => {
-    closeModal(analysisModal);
-});
+closeAnalysis.addEventListener('click', () => closeModal(analysisModal));
 
 clarifierButton.addEventListener('click', () => {
     if (!clarificationSuggestion?.recommend || clarificationDrawn || clarificationRequested) return;
-
     clarificationRequested = true;
     addClarificationSlot();
     updateDeckInstruction();
@@ -1073,14 +871,9 @@ async function callDeepSeekAPI(apiKey, cards) {
 
 async function callAIProviderAPI(providerId, apiKey, spread, cards, isClarificationPass = false) {
     const provider = AI_PROVIDERS[providerId];
-    if (!provider) {
-        throw new Error('Unsupported AI provider');
-    }
+    if (!provider) throw new Error('Unsupported AI provider');
 
-    const cardsText = cards.map((card, index) => (
-        `${index + 1}. ${card.name} [${card.position} / ${card.orientation}] - ${card.meaning}`
-    )).join('\n');
-
+    const cardsText = cards.map((card, index) => `${index + 1}. ${card.name} [${card.position} / ${card.orientation}] - ${card.meaning}`).join('\n');
     const clarificationRule = isClarificationPass
         ? '本次已经补过 1 张澄清牌，不允许再建议继续补牌。'
         : '只有当原牌阵存在关键歧义、答案被两种方向同时支持，或最后建议缺乏明确落点时，才建议补 1 张澄清牌；否则明确说明不需要补牌。';
@@ -1113,29 +906,7 @@ ${cardsText}
 4. 若 recommendClarifier 为 true，clarifierFocus 必须是一个非常具体的澄清角度。
 5. 若本次已经补过牌，则 recommendClarifier 必须为 false。`;
 
-    const response = await fetch(provider.endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: provider.model,
-            messages: [
-                { "role": "system", "content": "You are a helpful tarot reader." },
-                { "role": "user", "content": prompt }
-            ],
-            stream: false
-        })
-    });
-
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || 'API request failed');
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
+    return callProvider(providerId, apiKey, prompt);
 }
 
 function typewriterEffect(element, text) {

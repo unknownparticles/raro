@@ -2,7 +2,7 @@
 
 一个不仅拥有神秘美学设计，更融合了现代 AI 智慧的塔罗牌测算应用。
 
-> **当前版本特性**：沉浸式“秘境琉璃”主题、真实物理交互卡牌、DeepSeek AI 深度解牌、本地历史记录存储。
+> **当前版本特性**：沉浸式“秘境琉璃”主题、真实物理交互卡牌、DeepSeek AI 深度解牌、本地历史记录存储，以及赛博模式 Beta。
 
 ![Project Preview](https://via.placeholder.com/800x400?text=AI+Tarot+Preview)
 
@@ -20,6 +20,11 @@
     *   **直觉抽牌**：用户凭借直觉完成二次确认抽牌，再将卡牌放入对应牌位。
     *   **澄清牌建议**：解读后仅在确有必要时建议补 1 张澄清牌，并限定围绕具体焦点补充。
     *   **飞牌动画**：卡牌从牌组飞入牌阵的流畅动画效果。
+
+*   **🪐 赛博模式 Beta**
+    *   独立页面 `cyber.html`，不干扰经典模式逻辑。
+    *   浏览器端摄像头手势识别，支持牌阵选择、问题确认、读牌与结果阶段交互。
+    *   与经典模式共用同一套 AI Provider 配置、API Key 存储与历史记录保存。
 
 *   **🧠 AI 深度解牌**
     *   支持 DeepSeek、GLM、Kimi 等 OpenAI 兼容接口。
@@ -70,8 +75,12 @@ python -m http.server 8000
 ```
 .
 ├── index.html          # 主页面结构
+├── cyber.html          # 赛博模式 Beta 页面结构
+├── cyber.css           # 赛博模式 Beta 样式
+├── cyber.js            # 赛博模式 Beta 交互逻辑
 ├── styles.css          # 核心样式表（包含所有动画与响应式设计）
 ├── scripts.js          # 业务逻辑（交互、API调用、状态管理）
+├── tarot-ai-shared.js  # 经典/赛博共用的 AI Provider 与历史存储逻辑
 ├── tarot_images/       # 78张塔罗牌图片资源
 └── README.md           # 说明文档
 ```

@@ -9,47 +9,44 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@auth0/auth0-spa-js@1.19.3/dist/umd/auth0-spa.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="tarot-ai-shared.js"></script>
 </head>
 
 <body>
-    <!-- Background Effects Layer -->
     <div class="bg-effects">
         <div class="star-layer"></div>
         <div class="glow-layer"></div>
     </div>
 
-    <!-- History Sidebar -->
     <div id="history-sidebar" class="sidebar collapsed">
         <div class="sidebar-header">
             <h3>📜 历史记录</h3>
             <button id="close-sidebar" class="icon-btn">&times;</button>
         </div>
         <div id="history-list" class="history-list">
-            <!-- Items injected by JS -->
             <div class="empty-history">暂无记录</div>
         </div>
     </div>
 
-    <!-- Sidebar Toggle Button -->
     <button id="sidebar-toggle" class="sidebar-toggle" title="查看历史">📜</button>
 
     <header>
         <h1>AI塔罗测算</h1>
         <div class="auth-buttons">
+            <a href="cyber.html" class="nav-link-btn">赛博模式</a>
             <button id="settings-button" title="设置">⚙️ 设置</button>
             <button id="login-button">登录/注册</button>
             <button id="logout-button" style="display: none;">退出</button>
         </div>
     </header>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>设置</h2>
             <div class="input-group">
                 <label for="provider-select">AI Provider:</label>
-                <select id="provider-select">
+                <select id="provider-select" autocomplete="off" data-form-type="other">
                     <option value="deepseek">DeepSeek</option>
                     <option value="glm">GLM</option>
                     <option value="kimi">Kimi</option>
@@ -57,14 +54,13 @@
             </div>
             <div class="input-group">
                 <label for="provider-key">API Key:</label>
-                <input type="password" id="provider-key" placeholder="sk-...">
+                <input type="password" id="provider-key" placeholder="sk-..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
             </div>
             <div id="provider-help" class="provider-help"></div>
             <button id="save-settings">保存</button>
         </div>
     </div>
 
-    <!-- AI Analysis Result Modal -->
     <div id="analysis-modal" class="modal hidden">
         <div class="modal-content large">
             <span class="close-analysis">&times;</span>
@@ -78,11 +74,10 @@
     </div>
 
     <div class="container">
-
         <div class="controls-bar">
             <div class="select-wrapper">
                 <label for="spread">选择塔罗牌阵：</label>
-                <select id="spread">
+                <select id="spread" autocomplete="off" data-form-type="other">
                     <option value="timeline">时间之流三张</option>
                     <option value="decision">抉择指引三张</option>
                     <option value="relationship">关系洞察五张</option>
@@ -94,22 +89,17 @@
         </div>
         <div class="question-panel">
             <label for="question-input">你想问什么？</label>
-            <textarea id="question-input" rows="3" placeholder="例如：我未来三个月是否适合换工作？"></textarea>
+            <textarea id="question-input" rows="3" placeholder="例如：我未来三个月是否适合换工作？" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"></textarea>
             <div id="question-display" class="question-display hidden"></div>
         </div>
         <div id="spread-description" class="spread-description"></div>
 
-        <div class="tarot-spread" id="tarot-container">
-            <!-- Slots for the spread -->
-        </div>
+        <div class="tarot-spread" id="tarot-container"></div>
 
         <div class="deck-area hidden">
             <div id="deck-instruction" class="deck-instruction">请凭直觉抽取牌</div>
-            <div id="deck-container" class="deck-fan">
-                <!-- 78 Cards will be generated here by JS -->
-            </div>
+            <div id="deck-container" class="deck-fan"></div>
         </div>
-
     </div>
 
     <script src="scripts.js"></script>

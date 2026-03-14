@@ -1,0 +1,684 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&display=swap');
+
+:root {
+    --gold: #f3d085;
+    --gold-soft: rgba(243, 208, 133, 0.24);
+    --text: rgba(255, 248, 236, 0.96);
+    --text-soft: rgba(255, 248, 236, 0.66);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    color: var(--text);
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(243, 208, 133, 0.08), transparent 18%),
+        radial-gradient(circle at top left, rgba(129, 212, 209, 0.08), transparent 24%),
+        radial-gradient(circle at top right, rgba(189, 92, 145, 0.1), transparent 22%),
+        #050409;
+    overflow: hidden;
+}
+
+button,
+textarea,
+select,
+input,
+a {
+    font: inherit;
+}
+
+.bg-effects {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.star-layer,
+.glow-layer {
+    position: absolute;
+    inset: 0;
+}
+
+.star-layer {
+    opacity: 0.26;
+    background-image:
+        radial-gradient(1px 1px at 10% 20%, white 98%, transparent),
+        radial-gradient(1px 1px at 24% 72%, rgba(255, 255, 255, 0.8) 98%, transparent),
+        radial-gradient(2px 2px at 66% 34%, rgba(255, 255, 255, 0.75) 98%, transparent),
+        radial-gradient(1px 1px at 82% 14%, white 98%, transparent),
+        radial-gradient(1px 1px at 74% 80%, rgba(255, 255, 255, 0.65) 98%, transparent);
+    background-size: 52% 52%;
+    animation: stars-move 100s linear infinite;
+}
+
+.glow-layer {
+    background:
+        radial-gradient(circle at 50% 58%, rgba(243, 208, 133, 0.1), transparent 20%),
+        radial-gradient(circle at 50% 18%, rgba(91, 50, 122, 0.26), transparent 34%);
+}
+
+@keyframes stars-move {
+    from { background-position: 0 0; }
+    to { background-position: 100% 100%; }
+}
+
+.top-tools {
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    z-index: 20;
+    display: flex;
+    gap: 10px;
+}
+
+.top-tool,
+.ghost-button,
+.primary-button {
+    appearance: none;
+    border: 0;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 10px 16px;
+    border-radius: 999px;
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+}
+
+.primary-button {
+    color: #140f07;
+    background: linear-gradient(180deg, rgba(243, 208, 133, 1), rgba(243, 208, 133, 0.72));
+}
+
+.cyber-shell {
+    position: relative;
+    min-height: 100vh;
+}
+
+.intro-screen,
+.reading-screen {
+    position: absolute;
+    inset: 0;
+}
+
+.intro-screen {
+    display: grid;
+    place-content: center;
+    gap: 26px;
+    width: min(960px, calc(100vw - 48px));
+    margin: 0 auto;
+    padding: 56px 0;
+}
+
+.intro-copy {
+    text-align: center;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+}
+
+.intro-copy h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4.4rem);
+    line-height: 1.04;
+    color: var(--gold);
+}
+
+.intro-subtitle,
+.phase-hint {
+    margin: 10px auto 0;
+    max-width: 760px;
+    color: var(--text-soft);
+    font: 400 0.98rem/1.7 'Noto Serif SC', serif;
+}
+
+.phase-hint {
+    color: rgba(243, 208, 133, 0.88);
+}
+
+.spread-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.spread-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 18px 16px;
+    border: 0;
+    border-radius: 24px;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.24s ease, background 0.24s ease, box-shadow 0.24s ease;
+}
+
+.spread-card:hover,
+.spread-card.is-active {
+    transform: translateY(-4px);
+    background: rgba(243, 208, 133, 0.12);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.spread-card-number {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--gold);
+}
+
+.spread-card strong {
+    font-size: 1.08rem;
+}
+
+.spread-card span:last-child {
+    color: var(--text-soft);
+    font-family: 'Noto Serif SC', serif;
+}
+
+.question-shell {
+    display: grid;
+    gap: 16px;
+}
+
+.question-shell.is-hidden {
+    display: none;
+}
+
+.question-shell textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 20px 22px;
+    resize: none;
+    border: 0;
+    border-radius: 28px;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+    outline: none;
+    font: 500 1.1rem/1.8 'Noto Serif SC', serif;
+}
+
+.question-shell textarea::placeholder {
+    color: rgba(255, 248, 236, 0.38);
+}
+
+.intro-actions,
+.intro-status {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.intro-status {
+    color: var(--text-soft);
+    font: 400 0.92rem/1.5 'Noto Serif SC', serif;
+}
+
+.intro-status-global {
+    margin-top: 14px;
+    justify-content: center;
+}
+
+.reading-screen {
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+body.session-active .intro-screen,
+body.session-active .top-tools {
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.session-active .reading-screen {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.cyber-aura {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: min(70vw, 900px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(243, 208, 133, 0.12) 18%, rgba(243, 208, 133, 0.04) 42%, transparent 66%);
+}
+
+.deck-stage {
+    position: absolute;
+    inset: 0;
+    min-height: 100vh;
+    touch-action: pan-y;
+}
+
+.stage-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(128px, 12vw, 176px);
+    aspect-ratio: 0.59;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 240, 210, 0.78);
+    background:
+        linear-gradient(180deg, rgba(255, 248, 229, 0.14), rgba(255, 248, 229, 0.02)),
+        url('tarot_images/Background.webp') center/cover no-repeat;
+    box-shadow: 0 0 28px rgba(243, 208, 133, 0.34), 0 20px 44px rgba(0, 0, 0, 0.44);
+    transform-style: preserve-3d;
+    transition: transform 0.28s ease, opacity 0.28s ease, box-shadow 0.28s ease;
+}
+
+.stage-card.is-focus {
+    box-shadow: 0 0 36px rgba(243, 208, 133, 0.56), 0 26px 56px rgba(0, 0, 0, 0.5);
+    animation: focus-breathe 1.35s ease-in-out infinite;
+}
+
+.stage-card.is-armed {
+    box-shadow: 0 0 42px rgba(129, 212, 209, 0.56), 0 26px 56px rgba(0, 0, 0, 0.5);
+}
+
+.stage-card.is-picked {
+    opacity: 0.14;
+    filter: grayscale(1);
+}
+
+.reading-counter {
+    position: fixed;
+    top: 22px;
+    left: 22px;
+    z-index: 12;
+    color: rgba(255, 248, 236, 0.78);
+    font: 500 0.95rem/1.4 'Noto Serif SC', serif;
+    letter-spacing: 0.08em;
+}
+
+.picked-cards {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    z-index: 10;
+    display: flex;
+    gap: 14px;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+}
+
+body.results-ready .picked-cards {
+    opacity: 1;
+}
+
+.picked-card {
+    width: min(18vw, 160px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.picked-card-media {
+    overflow: hidden;
+    border-radius: 16px;
+    aspect-ratio: 0.59;
+    border: 1px solid rgba(255, 240, 210, 0.36);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.34);
+}
+
+.picked-card-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.picked-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
+    font: 400 0.86rem/1.45 'Noto Serif SC', serif;
+    color: var(--text-soft);
+}
+
+.picked-card-meta strong {
+    color: var(--gold);
+}
+
+.picked-chip,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.gesture-video,
+.gesture-overlay {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 180px;
+    height: 132px;
+    border-radius: 18px;
+    object-fit: cover;
+    opacity: 0.18;
+    pointer-events: none;
+}
+
+.gesture-video.is-mirrored,
+.gesture-overlay.is-mirrored {
+    transform: scaleX(-1);
+}
+
+.gesture-overlay {
+    opacity: 0.28;
+}
+
+.flying-picked-card {
+    position: fixed;
+    width: clamp(128px, 12vw, 176px);
+    aspect-ratio: 0.59;
+    perspective: 1200px;
+    z-index: 60;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), left 0.6s cubic-bezier(0.22, 1, 0.36, 1), top 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+}
+
+.flying-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.66s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flying-picked-card.is-flipped .flying-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flying-card-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 240, 210, 0.78);
+    backface-visibility: hidden;
+    box-shadow: 0 0 28px rgba(243, 208, 133, 0.34), 0 20px 44px rgba(0, 0, 0, 0.44);
+}
+
+.flying-card-back {
+    background:
+        linear-gradient(180deg, rgba(255, 248, 229, 0.14), rgba(255, 248, 229, 0.02)),
+        url('tarot_images/Background.webp') center/cover no-repeat;
+}
+
+.flying-card-front {
+    transform: rotateY(180deg);
+    background: #0f0c11;
+}
+
+.flying-card-front img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@keyframes focus-breathe {
+    0%, 100% { box-shadow: 0 0 30px rgba(243, 208, 133, 0.42), 0 26px 56px rgba(0, 0, 0, 0.5); }
+    50% { box-shadow: 0 0 44px rgba(243, 208, 133, 0.72), 0 26px 56px rgba(0, 0, 0, 0.5); }
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.84);
+    backdrop-filter: blur(10px);
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-card {
+    position: relative;
+    width: min(92vw, 560px);
+    padding: 28px;
+    border-radius: 28px;
+    background: rgba(12, 10, 18, 0.96);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+.modal-card select,
+.modal-card input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    outline: none;
+}
+
+.modal-card h2,
+.modal-card label {
+    color: var(--gold);
+}
+
+.large-card {
+    width: min(92vw, 960px);
+    height: min(82vh, 860px);
+    display: flex;
+    flex-direction: column;
+}
+
+.large-card.is-reset-arming {
+    animation: reset-arming 2s linear forwards;
+    box-shadow: 0 0 0 1px rgba(243, 208, 133, 0.35), 0 0 38px rgba(243, 208, 133, 0.24), 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+@keyframes reset-arming {
+    0% {
+        box-shadow: 0 0 0 1px rgba(243, 208, 133, 0.18), 0 0 18px rgba(243, 208, 133, 0.1), 0 24px 60px rgba(0, 0, 0, 0.34);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(243, 208, 133, 0.4), 0 0 32px rgba(243, 208, 133, 0.22), 0 24px 60px rgba(0, 0, 0, 0.34);
+        transform: scale(1.006);
+    }
+    100% {
+        box-shadow: 0 0 0 1px rgba(243, 208, 133, 0.72), 0 0 52px rgba(243, 208, 133, 0.4), 0 24px 60px rgba(0, 0, 0, 0.34);
+        transform: scale(1.012);
+    }
+}
+
+.provider-help {
+    margin-top: 14px;
+    color: var(--text-soft);
+    font: 400 0.9rem/1.6 'Noto Serif SC', serif;
+}
+
+.provider-help a {
+    color: #81d4d1;
+}
+
+.block-button {
+    width: 100%;
+    margin-top: 18px;
+}
+
+.analysis-result {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    font: 400 1rem/1.9 'Noto Serif SC', serif;
+}
+
+.analysis-gesture-hint {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(243, 208, 133, 0.9);
+    font: 400 0.92rem/1.6 'Noto Serif SC', serif;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.analysis-gesture-hint.is-warning {
+    background: rgba(243, 208, 133, 0.18);
+    color: #fff5de;
+    box-shadow: 0 0 0 1px rgba(243, 208, 133, 0.36), 0 0 28px rgba(243, 208, 133, 0.22);
+    transform: scale(1.01);
+}
+
+.analysis-picked-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.analysis-picked-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    text-align: center;
+}
+
+.analysis-picked-card img {
+    width: 100%;
+    aspect-ratio: 0.59;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+.analysis-picked-card strong {
+    color: var(--gold);
+}
+
+.analysis-picked-card span {
+    color: var(--text-soft);
+    font-size: 0.86rem;
+}
+
+.analysis-result h1,
+.analysis-result h2,
+.analysis-result h3 {
+    color: var(--gold);
+}
+
+.close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    color: var(--gold);
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .intro-screen {
+        width: calc(100vw - 24px);
+        padding: 88px 0 32px;
+    }
+
+    .spread-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .picked-cards {
+        gap: 10px;
+    }
+
+    .picked-card {
+        width: min(28vw, 130px);
+    }
+}
+
+@media (max-width: 640px) {
+    .top-tools {
+        top: 12px;
+        right: 12px;
+    }
+
+    .intro-actions {
+        flex-direction: column;
+    }
+
+    .spread-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .question-shell textarea {
+        min-height: 120px;
+        font-size: 1rem;
+    }
+
+    .gesture-video,
+    .gesture-overlay {
+        width: 124px;
+        height: 92px;
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .picked-cards {
+        bottom: 12px;
+        gap: 8px;
+    }
+
+    .picked-card {
+        width: min(30vw, 104px);
+    }
+
+    .picked-card-meta {
+        font-size: 0.74rem;
+    }
+}
