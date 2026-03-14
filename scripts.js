@@ -59,6 +59,7 @@ const tarotTranslations = {
 
 let drawnCardsCount = 0;
 const MAX_CARDS = 3;
+let preSelectedCard = null;
 
 async function initAuth0() {
     try {
@@ -215,12 +216,27 @@ function applyDeckRotation(rotationOffset) {
     });
 }
 
+function clearPreSelectedCard() {
+    if (preSelectedCard) {
+        preSelectedCard.classList.remove('pre-selected');
+        preSelectedCard = null;
+    }
+}
+
 function onCardClick(e) {
     if (drawnCardsCount >= MAX_CARDS) return;
 
     const card = e.target.closest('.deck-card');
     if (!card || card.classList.contains('selected')) return;
 
+    if (preSelectedCard !== card) {
+        clearPreSelectedCard();
+        card.classList.add('pre-selected');
+        preSelectedCard = card;
+        return;
+    }
+
+    clearPreSelectedCard();
     card.classList.add('selected');
 
     const slotIndex = drawnCardsCount;
@@ -366,6 +382,7 @@ function generateAndPlaceCard(slot) {
 
 function resetGame() {
     drawnCardsCount = 0;
+    clearPreSelectedCard();
     document.querySelectorAll('.card-slot').forEach(slot => slot.innerHTML = '');
 
     // Show deck again
