@@ -227,6 +227,25 @@ button:disabled {
     display: none;
 }
 
+.clarifier-panel {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.clarifier-panel.hidden {
+    display: none;
+}
+
+.clarifier-message {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 14px;
+    font-family: 'Playfair Display', serif;
+}
+
 .select-wrapper {
     display: flex;
     align-items: center;

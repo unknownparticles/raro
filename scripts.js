@@ -13,6 +13,7 @@ const deckInstruction = document.getElementById('deck-instruction');
 const spreadDescription = document.getElementById('spread-description');
 const questionInput = document.getElementById('question-input');
 const questionDisplay = document.getElementById('question-display');
+const deckArea = document.querySelector('.deck-area');
 
 const tarotCards = [
     // Major Arcana
@@ -68,6 +69,7 @@ const SPREADS = {
         name: '时间之流三张',
         cardCount: 3,
         description: '适合快速查看一件事的发展脉络，依次对应过去、现在、未来。',
+        suitableFor: '适合问：事情会怎么发展、目前处在什么阶段、短期走势如何。',
         positions: [
             { title: '过去', meaning: '事件的起因、已发生的影响' },
             { title: '现在', meaning: '你当前所处的状态与核心课题' },
@@ -79,6 +81,7 @@ const SPREADS = {
         name: '抉择指引三张',
         cardCount: 3,
         description: '适合面对选择、纠结或卡住的时候，帮助看清现状、阻碍与建议。',
+        suitableFor: '适合问：要不要做某个决定、卡点在哪里、下一步该怎么做。',
         positions: [
             { title: '现状', meaning: '问题当前的真实局面' },
             { title: '阻碍', meaning: '让事情停滞或反复的关键因素' },
@@ -90,6 +93,7 @@ const SPREADS = {
         name: '关系洞察五张',
         cardCount: 5,
         description: '适合感情、人际、合作关系，帮助看清双方状态、关系核心与后续走向。',
+        suitableFor: '适合问：对方怎么想、关系卡在哪、这段关系会往哪里走。',
         positions: [
             { title: '你的位置', meaning: '你在这段关系中的状态与需求' },
             { title: '对方的位置', meaning: '对方当前的态度、动机或顾虑' },
@@ -103,6 +107,7 @@ const SPREADS = {
         name: '事业路径五张',
         cardCount: 5,
         description: '适合工作、转职、项目推进，帮助看清现状、优势、盲点与下一步策略。',
+        suitableFor: '适合问：工作发展、转职机会、项目推进、职业优势与风险。',
         positions: [
             { title: '现状', meaning: '你在事业或项目中的当前阶段' },
             { title: '优势', meaning: '你可依靠的资源、能力或外部助力' },
@@ -119,31 +124,123 @@ let preSelectedCard = null;
 let deckInteractionBound = false;
 let currentQuestion = '';
 let isQuestionLocked = false;
+let deckCardOrder = [];
+let clarificationSuggestion = null;
+let clarificationRequested = false;
+let clarificationDrawn = false;
 
 function getSelectedSpread() {
     const spreadId = spreadSelect.value;
     return SPREADS[spreadId] || SPREADS.timeline;
 }
 
+function getTargetDrawCount() {
+    return getSelectedSpread().cardCount + (clarificationRequested || clarificationDrawn ? 1 : 0);
+}
+
+function shuffle(array) {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
+
+function initializeDeckOrder() {
+    deckCardOrder = shuffle(Array.from({ length: tarotCards.length }, (_, index) => index));
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function updateQuestionUI() {
     questionInput.disabled = isQuestionLocked;
     questionDisplay.classList.toggle('hidden', !isQuestionLocked);
-    questionDisplay.innerHTML = isQuestionLocked ? `<strong>本次问题：</strong> ${currentQuestion}` : '';
+    questionDisplay.innerHTML = isQuestionLocked ? `<strong>本次问题：</strong> ${escapeHtml(currentQuestion)}` : '';
     drawButton.innerText = isQuestionLocked ? '重置牌阵' : '开始抽牌';
+    updateDeckInstruction();
 }
 
 function syncDeckVisibility() {
-    const deckArea = document.querySelector('.deck-area');
     if (!deckArea) return;
 
-    const shouldShow = isQuestionLocked && drawnCardsCount < getSelectedSpread().cardCount;
+    const shouldShow = isQuestionLocked && drawnCardsCount < getTargetDrawCount();
     deckArea.classList.toggle('hidden', !shouldShow);
+}
+
+function updateDeckInstruction() {
+    const spread = getSelectedSpread();
+    if (!isQuestionLocked) {
+        deckInstruction.innerText = `请先输入问题，再抽取 ${spread.cardCount} 张牌`;
+        return;
+    }
+
+    if (clarificationRequested && !clarificationDrawn) {
+        const focus = clarificationSuggestion?.focus || '当前最模糊的部分';
+        deckInstruction.innerText = `建议补 1 张澄清牌：请围绕“${focus}”再抽一张未抽过的牌`;
+        return;
+    }
+
+    deckInstruction.innerText = `请凭直觉抽取 ${spread.cardCount} 张牌`;
+}
+
+function updateClarifierPanel(parsedResult = null) {
+    const panel = document.getElementById('clarifier-panel');
+    const message = document.getElementById('clarifier-message');
+    const button = document.getElementById('clarifier-button');
+
+    clarificationSuggestion = parsedResult ? {
+        recommend: Boolean(parsedResult.recommendClarifier),
+        reason: parsedResult.clarifierReason || '',
+        focus: parsedResult.clarifierFocus || ''
+    } : null;
+
+    if (!panel || !message || !button) return;
+
+    if (!parsedResult || clarificationDrawn) {
+        panel.classList.add('hidden');
+        message.innerHTML = '';
+        button.style.display = 'none';
+        return;
+    }
+
+    if (clarificationSuggestion.recommend) {
+        const focusText = clarificationSuggestion.focus ? `聚焦点：${clarificationSuggestion.focus}` : '聚焦点：当前牌阵最模糊的核心。';
+        message.innerHTML = `建议是否补牌：建议补 1 张澄清牌。<br>${clarificationSuggestion.reason || '当前牌阵存在一个尚未完全展开的关键点。'}<br>${focusText}`;
+        button.style.display = 'inline-block';
+    } else {
+        message.innerHTML = `建议是否补牌：当前牌阵信息已经足够完整，不建议继续补牌。${clarificationSuggestion.reason ? `<br>${clarificationSuggestion.reason}` : ''}`;
+        button.style.display = 'none';
+    }
+
+    panel.classList.remove('hidden');
+}
+
+function addClarificationSlot() {
+    const focus = clarificationSuggestion?.focus || '当前牌阵最需要补充说明的部分';
+    const slot = document.createElement('div');
+    slot.className = 'card-slot clarification-slot';
+    slot.dataset.index = String(getSelectedSpread().cardCount);
+    slot.dataset.positionTitle = '澄清牌';
+    slot.dataset.positionMeaning = focus;
+    slot.innerHTML = `
+        <div class="slot-placeholder">
+            <strong>澄清牌</strong>
+            <span>${focus}</span>
+        </div>
+    `;
+    tarotContainer.appendChild(slot);
+    tarotContainer.dataset.cardCount = String(getTargetDrawCount());
 }
 
 function renderSpreadLayout() {
     const spread = getSelectedSpread();
     tarotContainer.innerHTML = '';
-    tarotContainer.dataset.cardCount = String(spread.cardCount);
+    tarotContainer.dataset.cardCount = String(getTargetDrawCount());
 
     spread.positions.forEach((position, index) => {
         const slot = document.createElement('div');
@@ -160,10 +257,12 @@ function renderSpreadLayout() {
         tarotContainer.appendChild(slot);
     });
 
-    spreadDescription.innerText = `${spread.name}：${spread.description}`;
-    deckInstruction.innerText = isQuestionLocked
-        ? `请凭直觉抽取 ${spread.cardCount} 张牌`
-        : `请先输入问题，再抽取 ${spread.cardCount} 张牌`;
+    if (clarificationRequested || clarificationDrawn) {
+        addClarificationSlot();
+    }
+
+    spreadDescription.innerHTML = `<strong>${spread.name}</strong>：${spread.description}<br>${spread.suitableFor}`;
+    updateDeckInstruction();
 }
 
 async function initAuth0() {
@@ -225,6 +324,7 @@ async function logout() {
 function initDeck() {
     const deckContainer = document.getElementById('deck-container');
     if (!deckContainer) return;
+    if (deckCardOrder.length === 0) initializeDeckOrder();
 
     deckContainer.innerHTML = '';
     const totalCards = 78;
@@ -248,6 +348,7 @@ function initDeck() {
         const card = document.createElement('div');
         card.className = 'deck-card';
         card.dataset.index = i;
+        card.dataset.cardIndex = String(deckCardOrder[i]);
 
         // Append inner to wrapper, wrapper to deck
         wrapper.appendChild(card);
@@ -264,8 +365,6 @@ function initDeck() {
     let startX = 0;
     let currentRotation = 0;
     let previousRotation = 0;
-
-    const deckArea = document.querySelector('.deck-area');
 
     // Mouse Events
     deckArea.addEventListener('mousedown', (e) => {
@@ -324,13 +423,6 @@ function applyDeckRotation(rotationOffset) {
     });
 }
 
-function getCardImageSources(imageIndex) {
-    return {
-        primary: `tarot_images/Tarot_Card_${imageIndex}.webp`,
-        fallback: `tarot_images/Tarot_Card_${imageIndex}.png`
-    };
-}
-
 function clearPreSelectedCard() {
     if (preSelectedCard) {
         preSelectedCard.classList.remove('pre-selected');
@@ -339,9 +431,8 @@ function clearPreSelectedCard() {
 }
 
 function onCardClick(e) {
-    const spread = getSelectedSpread();
     if (!isQuestionLocked) return;
-    if (drawnCardsCount >= spread.cardCount) return;
+    if (drawnCardsCount >= getTargetDrawCount()) return;
 
     const card = e.target.closest('.deck-card');
     if (!card || card.classList.contains('selected')) return;
@@ -357,20 +448,27 @@ function onCardClick(e) {
     card.classList.add('selected');
 
     const slotIndex = drawnCardsCount;
+    const cardIndex = Number(card.dataset.cardIndex);
     drawnCardsCount++;
 
-    animateCardToSlot(card, slotIndex);
+    animateCardToSlot(card, slotIndex, cardIndex);
 
     // Auto hide deck if full
-    if (drawnCardsCount >= spread.cardCount) {
+    if (drawnCardsCount >= getTargetDrawCount()) {
         setTimeout(() => {
             syncDeckVisibility();
             updateAnalyzeButtonVisibility();
+            if (clarificationRequested && !clarificationDrawn) {
+                clarificationDrawn = true;
+                clarificationRequested = false;
+                updateDeckInstruction();
+                analyzeCurrentReading(true);
+            }
         }, 1000);
     }
 }
 
-function animateCardToSlot(startElement, slotIndex) {
+function animateCardToSlot(startElement, slotIndex, cardIndex) {
     const slot = document.querySelector(`.card-slot[data-index="${slotIndex}"]`);
     if (!slot) return;
 
@@ -419,13 +517,12 @@ function animateCardToSlot(startElement, slotIndex) {
 
     setTimeout(() => {
         flyingCard.remove();
-        generateAndPlaceCard(slot);
+        generateAndPlaceCard(slot, cardIndex);
     }, 800);
 }
 
-function generateAndPlaceCard(slot) {
-    const randomIndex = Math.floor(Math.random() * tarotCards.length);
-    const cardName = tarotCards[randomIndex];
+function generateAndPlaceCard(slot, cardIndex) {
+    const cardName = tarotCards[cardIndex];
     const isReversed = Math.random() < 0.5;
     const positionTitle = slot.dataset.positionTitle || '牌位';
     const positionMeaning = slot.dataset.positionMeaning || '';
@@ -447,19 +544,13 @@ function generateAndPlaceCard(slot) {
     const img = new Image();
     // Use the 1-78 numbered naming convention
     // randomIndex is 0-77, so we add 1 to get 1-78
-    const imageIndex = randomIndex + 1;
-    const imageSources = getCardImageSources(imageIndex);
-    img.src = imageSources.primary;
+    const imageIndex = cardIndex + 1;
+    img.src = `tarot_images/Tarot_Card_${imageIndex}.webp`;
     img.alt = cardName;
     img.decoding = 'async';
     img.fetchPriority = 'high';
 
     img.onerror = () => {
-        if (img.src.endsWith('.webp')) {
-            img.src = imageSources.fallback;
-            return;
-        }
-
         const fallbackDiv = document.createElement('div');
         fallbackDiv.className = 'card-fallback';
 
@@ -513,9 +604,13 @@ function generateAndPlaceCard(slot) {
 function resetGame() {
     drawnCardsCount = 0;
     clearPreSelectedCard();
+    initializeDeckOrder();
     currentQuestion = '';
     isQuestionLocked = false;
     questionInput.value = '';
+    clarificationSuggestion = null;
+    clarificationRequested = false;
+    clarificationDrawn = false;
     renderSpreadLayout();
 
     // Hide Analyze Button
@@ -524,6 +619,7 @@ function resetGame() {
 
     updateQuestionUI();
     syncDeckVisibility();
+    updateClarifierPanel(null);
     initDeck();
 }
 
@@ -543,8 +639,12 @@ function handleDrawButtonClick() {
     currentQuestion = question;
     isQuestionLocked = true;
     clearPreSelectedCard();
+    clarificationSuggestion = null;
+    clarificationRequested = false;
+    clarificationDrawn = false;
     renderSpreadLayout();
     updateQuestionUI();
+    updateClarifierPanel(null);
     syncDeckVisibility();
     updateAnalyzeButtonVisibility();
 }
@@ -584,6 +684,7 @@ const analyzeBtn = document.getElementById('analyze-btn');
 const analysisModal = document.getElementById('analysis-modal');
 const closeAnalysis = document.querySelector('.close-analysis');
 const analysisResult = document.getElementById('analysis-result');
+const clarifierButton = document.getElementById('clarifier-button');
 
 const AI_PROVIDERS = {
     deepseek: {
@@ -760,7 +861,7 @@ function renderHistoryList() {
         div.className = 'history-item';
         div.innerHTML = `
             <div class="history-date">${item.date}</div>
-            <div class="history-summary">${item.summary}</div>
+            <div class="history-summary">${escapeHtml(item.summary)}</div>
         `;
         div.addEventListener('click', () => {
             showAnalysis(item.result, true);
@@ -775,6 +876,48 @@ function showAnalysis(markdownText, isHistory = false) {
     // Parse Markdown
     const htmlContent = marked.parse(markdownText);
     analysisResult.innerHTML = htmlContent;
+    if (isHistory) {
+        updateClarifierPanel(null);
+    }
+}
+
+function getCurrentCardsData() {
+    return Array.from(document.querySelectorAll('.card-slot'))
+        .filter(slot => slot.dataset.cardName)
+        .sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index))
+        .map(slot => ({
+            name: slot.dataset.cardName,
+            position: slot.dataset.positionTitle,
+            orientation: slot.dataset.orientation,
+            meaning: slot.dataset.positionMeaning
+        }));
+}
+
+function extractJsonFromText(text) {
+    const fencedMatch = text.match(/```json\s*([\s\S]*?)```/i);
+    if (fencedMatch) return fencedMatch[1].trim();
+
+    const objectMatch = text.match(/\{[\s\S]*\}/);
+    return objectMatch ? objectMatch[0] : text;
+}
+
+function parseAIReadingResponse(rawText) {
+    try {
+        const parsed = JSON.parse(extractJsonFromText(rawText));
+        return {
+            markdown: parsed.markdown || rawText,
+            recommendClarifier: Boolean(parsed.recommendClarifier),
+            clarifierReason: parsed.clarifierReason || '',
+            clarifierFocus: parsed.clarifierFocus || ''
+        };
+    } catch (error) {
+        return {
+            markdown: rawText,
+            recommendClarifier: false,
+            clarifierReason: '',
+            clarifierFocus: ''
+        };
+    }
 }
 
 // Modify Analyze Button Logic to use Markdown and History
@@ -790,7 +933,7 @@ function showAnalysis(markdownText, isHistory = false) {
 const newAnalyzeBtn = analyzeBtn.cloneNode(true);
 analyzeBtn.parentNode.replaceChild(newAnalyzeBtn, analyzeBtn);
 
-newAnalyzeBtn.addEventListener('click', async () => {
+async function analyzeCurrentReading(isClarificationPass = false) {
     const providerId = getSelectedProvider();
     const provider = AI_PROVIDERS[providerId];
     const apiKey = getProviderApiKey(providerId);
@@ -808,47 +951,43 @@ newAnalyzeBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Gather drawn cards
-    const slots = document.querySelectorAll('.card-slot');
-    let cardsData = [];
-    slots.forEach(slot => {
-        if (slot.dataset.cardName) {
-            cardsData.push({
-                name: slot.dataset.cardName,
-                position: slot.dataset.positionTitle,
-                orientation: slot.dataset.orientation,
-                meaning: slot.dataset.positionMeaning
-            });
-        }
-    });
+    const cardsData = getCurrentCardsData();
 
-    if (cardsData.length < spread.cardCount) {
-        alert(`请先抽取完 ${spread.cardCount} 张牌`);
+    if (cardsData.length < getTargetDrawCount()) {
+        alert(`请先抽取完 ${getTargetDrawCount()} 张牌`);
         return;
     }
 
     // Show Analysis Modal with loading state
     openModal(analysisModal);
     analysisResult.innerHTML = '<p>🔮 正在连接高维智慧，分析牌阵中...</p>';
+    updateClarifierPanel(null);
 
     try {
-        const interpretation = await callAIProviderAPI(providerId, apiKey, spread, cardsData);
+        const interpretation = await callAIProviderAPI(providerId, apiKey, spread, cardsData, isClarificationPass);
+        const parsedResult = parseAIReadingResponse(interpretation);
 
         // Show Parsed Markdown
-        showAnalysis(interpretation);
+        showAnalysis(parsedResult.markdown);
+        updateClarifierPanel(parsedResult);
 
         // Save to History
         const now = new Date();
         const dateStr = now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         saveHistory({
             date: dateStr,
-            summary: `问题：${currentQuestion} · ${spread.name}`,
-            result: interpretation
+            summary: `问题：${currentQuestion} · ${spread.name}${isClarificationPass ? ' · 已补澄清牌' : ''}`,
+            result: parsedResult.markdown
         });
 
     } catch (error) {
         analysisResult.innerHTML = `<p style="color: #ff6b6b;">连接中断: ${error.message}</p>`;
+        updateClarifierPanel(null);
     }
+}
+
+newAnalyzeBtn.addEventListener('click', () => {
+    analyzeCurrentReading(false);
 });
 
 // Update window.onload to include initHistory
@@ -864,11 +1003,23 @@ closeAnalysis.addEventListener('click', () => {
     closeModal(analysisModal);
 });
 
+clarifierButton.addEventListener('click', () => {
+    if (!clarificationSuggestion?.recommend || clarificationDrawn || clarificationRequested) return;
+
+    clarificationRequested = true;
+    addClarificationSlot();
+    updateDeckInstruction();
+    updateClarifierPanel(null);
+    syncDeckVisibility();
+    updateAnalyzeButtonVisibility();
+    closeModal(analysisModal);
+});
+
 async function callDeepSeekAPI(apiKey, cards) {
-    return callAIProviderAPI('deepseek', apiKey, getSelectedSpread(), cards);
+    return callAIProviderAPI('deepseek', apiKey, getSelectedSpread(), cards, false);
 }
 
-async function callAIProviderAPI(providerId, apiKey, spread, cards) {
+async function callAIProviderAPI(providerId, apiKey, spread, cards, isClarificationPass = false) {
     const provider = AI_PROVIDERS[providerId];
     if (!provider) {
         throw new Error('Unsupported AI provider');
@@ -878,23 +1029,37 @@ async function callAIProviderAPI(providerId, apiKey, spread, cards) {
         `${index + 1}. ${card.name} [${card.position} / ${card.orientation}] - ${card.meaning}`
     )).join('\n');
 
+    const clarificationRule = isClarificationPass
+        ? '本次已经补过 1 张澄清牌，不允许再建议继续补牌。'
+        : '只有当原牌阵存在关键歧义、答案被两种方向同时支持，或最后建议缺乏明确落点时，才建议补 1 张澄清牌；否则明确说明不需要补牌。';
+
     const prompt = `你是一位精通神秘学的塔罗牌大师。请根据以下牌阵为求问者进行解读：
 
 求问者的问题：${currentQuestion}
 
 牌阵名称：${spread.name}
 牌阵说明：${spread.description}
+适合提问：${spread.suitableFor}
 解析要求：${spread.interpretationGuide}
+补牌规则：${clarificationRule}
 
 牌位与抽牌结果：
 ${cardsText}
 
-请按以下结构输出：
-1. 先用 2-3 句话概括整体局势。
-2. 逐张解释每个牌位的含义，必须结合该牌位职责，而不是只讲通用牌义。
-3. 最后给出 2-3 条明确建议或提醒。
+请严格输出 JSON，不要输出任何 JSON 之外的文字，格式如下：
+{
+  "markdown": "解读正文，使用 Markdown。需要包含：整体局势、逐张解析、建议提醒。",
+  "recommendClarifier": true,
+  "clarifierReason": "为什么需要或不需要补牌。若不需要，也要写明理由。",
+  "clarifierFocus": "如果需要补牌，最适合围绕什么焦点补 1 张；如果不需要，返回空字符串"
+}
 
-整体语气要温暖、具体、有洞察力，控制在 500 字以内。`;
+要求：
+1. markdown 必须紧扣“求问者的问题”，不能只讲抽象牌义。
+2. 逐张解析必须结合牌位职责，而不是只解释正逆位。
+3. 整体语气温暖、具体、有洞察力，markdown 控制在 500 字以内。
+4. 若 recommendClarifier 为 true，clarifierFocus 必须是一个非常具体的澄清角度。
+5. 若本次已经补过牌，则 recommendClarifier 必须为 false。`;
 
     const response = await fetch(provider.endpoint, {
         method: 'POST',
