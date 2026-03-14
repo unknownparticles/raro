@@ -679,6 +679,7 @@ const closeSettings = document.querySelector('.close-modal');
 const saveSettingsBtn = document.getElementById('save-settings');
 const providerSelect = document.getElementById('provider-select');
 const providerInput = document.getElementById('provider-key');
+const providerHelp = document.getElementById('provider-help');
 
 const analyzeBtn = document.getElementById('analyze-btn');
 const analysisModal = document.getElementById('analysis-modal');
@@ -691,19 +692,25 @@ const AI_PROVIDERS = {
         label: 'DeepSeek',
         storageKey: 'provider_api_key_deepseek',
         endpoint: 'https://api.deepseek.com/chat/completions',
-        model: 'deepseek-chat'
+        model: 'deepseek-chat',
+        keyUrl: 'https://platform.deepseek.com/api_keys',
+        keyHint: '打开 DeepSeek 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
     },
     glm: {
         label: 'GLM',
         storageKey: 'provider_api_key_glm',
         endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-        model: 'glm-4-flash'
+        model: 'glm-4-flash',
+        keyUrl: 'https://bigmodel.cn/usercenter/proj-mgmt/apikeys',
+        keyHint: '打开智谱 BigModel 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
     },
     kimi: {
         label: 'Kimi',
         storageKey: 'provider_api_key_kimi',
         endpoint: 'https://api.moonshot.cn/v1/chat/completions',
-        model: 'moonshot-v1-8k'
+        model: 'moonshot-v1-8k',
+        keyUrl: 'https://platform.moonshot.cn/console/api-keys',
+        keyHint: '打开 Moonshot 控制台创建 API key，创建后复制到这里。可能需要先完成实名认证。'
     }
 };
 
@@ -742,6 +749,14 @@ function updateProviderInput() {
     const label = document.querySelector('label[for="provider-key"]');
     if (label) {
         label.innerText = `${provider.label} API Key:`;
+    }
+
+    if (providerHelp) {
+        providerHelp.innerHTML = `
+            <strong>${provider.label} 获取方式</strong>
+            <span>${provider.keyHint}</span>
+            <a href="${provider.keyUrl}" target="_blank" rel="noopener noreferrer">${provider.keyUrl}</a>
+        `;
     }
 }
 

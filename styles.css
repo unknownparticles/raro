@@ -618,6 +618,35 @@ select:focus,
     margin: 18px 0;
 }
 
+.provider-help {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 4px 0 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(243, 208, 133, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-soft);
+    font: 400 0.92rem/1.6 'Playfair Display', serif;
+}
+
+.provider-help strong {
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.86rem;
+    letter-spacing: 0.08em;
+}
+
+.provider-help a {
+    color: var(--cyan);
+    word-break: break-all;
+}
+
+.provider-help a:hover {
+    color: #b8f0ef;
+}
+
 #save-settings {
     width: 100%;
     color: #1a1210;
