@@ -7,6 +7,10 @@ let isAuthenticated = false;
 const loginButton = document.getElementById("login-button");
 const logoutButton = document.getElementById("logout-button");
 const drawButton = document.getElementById("draw-card");
+const spreadSelect = document.getElementById('spread');
+const tarotContainer = document.getElementById('tarot-container');
+const deckInstruction = document.getElementById('deck-instruction');
+const spreadDescription = document.getElementById('spread-description');
 
 const tarotCards = [
     // Major Arcana
@@ -57,9 +61,89 @@ const tarotTranslations = {
     'Queen of Pentacles': '钱币皇后', 'King of Pentacles': '钱币国王'
 };
 
+const SPREADS = {
+    timeline: {
+        name: '时间之流三张',
+        cardCount: 3,
+        description: '适合快速查看一件事的发展脉络，依次对应过去、现在、未来。',
+        positions: [
+            { title: '过去', meaning: '事件的起因、已发生的影响' },
+            { title: '现在', meaning: '你当前所处的状态与核心课题' },
+            { title: '未来', meaning: '若保持现状，接下来的趋势' }
+        ],
+        interpretationGuide: '重点串联时间线，解释过去如何作用于当下，以及未来趋势如何被改变。'
+    },
+    decision: {
+        name: '抉择指引三张',
+        cardCount: 3,
+        description: '适合面对选择、纠结或卡住的时候，帮助看清现状、阻碍与建议。',
+        positions: [
+            { title: '现状', meaning: '问题当前的真实局面' },
+            { title: '阻碍', meaning: '让事情停滞或反复的关键因素' },
+            { title: '建议', meaning: '最值得采取的态度或行动' }
+        ],
+        interpretationGuide: '重点分析阻碍来源，并给出明确、可执行的建议，不要只复述牌义。'
+    },
+    relationship: {
+        name: '关系洞察五张',
+        cardCount: 5,
+        description: '适合感情、人际、合作关系，帮助看清双方状态、关系核心与后续走向。',
+        positions: [
+            { title: '你的位置', meaning: '你在这段关系中的状态与需求' },
+            { title: '对方的位置', meaning: '对方当前的态度、动机或顾虑' },
+            { title: '关系核心', meaning: '这段关系正在经历的本质课题' },
+            { title: '挑战', meaning: '需要面对的矛盾、误解或现实压力' },
+            { title: '走向', meaning: '若当前模式持续，关系可能的发展' }
+        ],
+        interpretationGuide: '重点比较双方差异，指出关系核心和现实挑战，并说明走向是如何形成的。'
+    },
+    career: {
+        name: '事业路径五张',
+        cardCount: 5,
+        description: '适合工作、转职、项目推进，帮助看清现状、优势、盲点与下一步策略。',
+        positions: [
+            { title: '现状', meaning: '你在事业或项目中的当前阶段' },
+            { title: '优势', meaning: '你可依靠的资源、能力或外部助力' },
+            { title: '盲点', meaning: '容易忽略的风险、心态或判断偏差' },
+            { title: '行动', meaning: '最值得优先采取的行动方向' },
+            { title: '结果', meaning: '若按当前趋势推进，最可能出现的结果' }
+        ],
+        interpretationGuide: '重点把优势、盲点和行动建议连成一条清晰策略线。'
+    }
+};
+
 let drawnCardsCount = 0;
-const MAX_CARDS = 3;
 let preSelectedCard = null;
+let deckInteractionBound = false;
+
+function getSelectedSpread() {
+    const spreadId = spreadSelect.value;
+    return SPREADS[spreadId] || SPREADS.timeline;
+}
+
+function renderSpreadLayout() {
+    const spread = getSelectedSpread();
+    tarotContainer.innerHTML = '';
+    tarotContainer.dataset.cardCount = String(spread.cardCount);
+
+    spread.positions.forEach((position, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'card-slot';
+        slot.dataset.index = String(index);
+        slot.dataset.positionTitle = position.title;
+        slot.dataset.positionMeaning = position.meaning;
+        slot.innerHTML = `
+            <div class="slot-placeholder">
+                <strong>${position.title}</strong>
+                <span>${position.meaning}</span>
+            </div>
+        `;
+        tarotContainer.appendChild(slot);
+    });
+
+    spreadDescription.innerText = `${spread.name}：${spread.description}`;
+    deckInstruction.innerText = `请凭直觉抽取 ${spread.cardCount} 张牌`;
+}
 
 async function initAuth0() {
     try {
@@ -152,6 +236,8 @@ function initDeck() {
         card.addEventListener('click', onCardClick);
     }
 
+    if (deckInteractionBound) return;
+
     // Drag / Rotation Logic
     let isDragging = false;
     let startX = 0;
@@ -163,7 +249,7 @@ function initDeck() {
     // Mouse Events
     deckArea.addEventListener('mousedown', (e) => {
         isDragging = true;
-        deckArea.classList.add('is-dragging'); // Disable hover
+        deckArea.classList.add('is-dragging');
         startX = e.clientX;
         deckArea.style.cursor = 'grabbing';
     });
@@ -171,7 +257,6 @@ function initDeck() {
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         const deltaX = e.clientX - startX;
-        // Sensitivity: 1px movement = 0.2 deg rotation
         const rotationDelta = deltaX * 0.2;
         currentRotation = previousRotation + rotationDelta;
         applyDeckRotation(currentRotation);
@@ -180,7 +265,7 @@ function initDeck() {
     window.addEventListener('mouseup', () => {
         if (isDragging) {
             isDragging = false;
-            deckArea.classList.remove('is-dragging'); // Re-enable hover
+            deckArea.classList.remove('is-dragging');
             previousRotation = currentRotation;
             deckArea.style.cursor = 'grab';
         }
@@ -206,6 +291,8 @@ function initDeck() {
         deckArea.classList.remove('is-dragging');
         previousRotation = currentRotation;
     });
+
+    deckInteractionBound = true;
 }
 
 function applyDeckRotation(rotationOffset) {
@@ -231,7 +318,8 @@ function clearPreSelectedCard() {
 }
 
 function onCardClick(e) {
-    if (drawnCardsCount >= MAX_CARDS) return;
+    const spread = getSelectedSpread();
+    if (drawnCardsCount >= spread.cardCount) return;
 
     const card = e.target.closest('.deck-card');
     if (!card || card.classList.contains('selected')) return;
@@ -252,7 +340,7 @@ function onCardClick(e) {
     animateCardToSlot(card, slotIndex);
 
     // Auto hide deck if full
-    if (drawnCardsCount >= MAX_CARDS) {
+    if (drawnCardsCount >= spread.cardCount) {
         setTimeout(() => {
             const deckArea = document.querySelector('.deck-area');
             if (deckArea) deckArea.classList.add('hidden');
@@ -318,6 +406,8 @@ function generateAndPlaceCard(slot) {
     const randomIndex = Math.floor(Math.random() * tarotCards.length);
     const cardName = tarotCards[randomIndex];
     const isReversed = Math.random() < 0.5;
+    const positionTitle = slot.dataset.positionTitle || '牌位';
+    const positionMeaning = slot.dataset.positionMeaning || '';
 
     const cardContainer = document.createElement('div');
     cardContainer.className = 'card-container';
@@ -382,10 +472,14 @@ function generateAndPlaceCard(slot) {
     // External Label for both image and fallback cases
     const labelDiv = document.createElement('div');
     labelDiv.className = 'card-label';
-    labelDiv.innerHTML = `<strong>${chineseName}</strong><br><span>${positionText}</span>`;
+    labelDiv.innerHTML = `<strong>${chineseName}</strong><span class="label-position">${positionTitle}</span><span>${positionText}</span>`;
     cardContainer.appendChild(labelDiv);
 
+    slot.innerHTML = '';
     slot.appendChild(cardContainer);
+    slot.dataset.cardName = chineseName;
+    slot.dataset.orientation = positionText;
+    slot.dataset.positionMeaning = positionMeaning;
 
     setTimeout(() => {
         cardInner.classList.add('flipped');
@@ -398,7 +492,7 @@ function generateAndPlaceCard(slot) {
 function resetGame() {
     drawnCardsCount = 0;
     clearPreSelectedCard();
-    document.querySelectorAll('.card-slot').forEach(slot => slot.innerHTML = '');
+    renderSpreadLayout();
 
     // Show deck again
     const deckArea = document.querySelector('.deck-area');
@@ -414,12 +508,21 @@ function resetGame() {
 loginButton.addEventListener("click", login);
 logoutButton.addEventListener("click", logout);
 drawButton.addEventListener("click", resetGame);
+spreadSelect.addEventListener('change', () => {
+    localStorage.setItem('selected_tarot_spread', spreadSelect.value);
+    resetGame();
+});
 
 // Update draw text to 'Restart'
 drawButton.innerText = "重置牌阵";
 drawButton.disabled = true; // Disabled until Auth/Init finishes
 
 window.onload = () => {
+    const savedSpread = localStorage.getItem('selected_tarot_spread');
+    if (savedSpread && SPREADS[savedSpread]) {
+        spreadSelect.value = savedSpread;
+    }
+    renderSpreadLayout();
     initAuth0();
     initDeck();
 };
@@ -501,7 +604,7 @@ function updateAnalyzeButtonVisibility() {
     const actionBtn = document.getElementById('analyze-btn');
     if (!actionBtn) return;
 
-    const shouldShow = drawnCardsCount >= MAX_CARDS && hasProviderApiKey();
+    const shouldShow = drawnCardsCount >= getSelectedSpread().cardCount && hasProviderApiKey();
     actionBtn.style.display = shouldShow ? 'inline-block' : 'none';
     actionBtn.classList.toggle('visible', shouldShow);
 }
@@ -645,6 +748,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
     const providerId = getSelectedProvider();
     const provider = AI_PROVIDERS[providerId];
     const apiKey = getProviderApiKey(providerId);
+    const spread = getSelectedSpread();
 
     if (!apiKey) {
         alert(`请先在设置中输入 ${provider.label} API Key`);
@@ -656,16 +760,18 @@ newAnalyzeBtn.addEventListener('click', async () => {
     const slots = document.querySelectorAll('.card-slot');
     let cardsData = [];
     slots.forEach(slot => {
-        const label = slot.querySelector('.card-label');
-        if (label) {
-            const name = label.querySelector('strong').innerText;
-            const position = label.querySelector('span').innerText;
-            cardsData.push(`${name} [${position}]`);
+        if (slot.dataset.cardName) {
+            cardsData.push({
+                name: slot.dataset.cardName,
+                position: slot.dataset.positionTitle,
+                orientation: slot.dataset.orientation,
+                meaning: slot.dataset.positionMeaning
+            });
         }
     });
 
-    if (cardsData.length < 3) {
-        alert('请先抽取完 3 张牌');
+    if (cardsData.length < spread.cardCount) {
+        alert(`请先抽取完 ${spread.cardCount} 张牌`);
         return;
     }
 
@@ -674,7 +780,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
     analysisResult.innerHTML = '<p>🔮 正在连接高维智慧，分析牌阵中...</p>';
 
     try {
-        const interpretation = await callAIProviderAPI(providerId, apiKey, cardsData);
+        const interpretation = await callAIProviderAPI(providerId, apiKey, spread, cardsData);
 
         // Show Parsed Markdown
         showAnalysis(interpretation);
@@ -684,7 +790,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
         const dateStr = now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         saveHistory({
             date: dateStr,
-            summary: cardsData.join(', '),
+            summary: `${spread.name} · ${cardsData.map(card => `${card.name}[${card.position}/${card.orientation}]`).join(', ')}`,
             result: interpretation
         });
 
@@ -707,23 +813,34 @@ closeAnalysis.addEventListener('click', () => {
 });
 
 async function callDeepSeekAPI(apiKey, cards) {
-    return callAIProviderAPI('deepseek', apiKey, cards);
+    return callAIProviderAPI('deepseek', apiKey, getSelectedSpread(), cards);
 }
 
-async function callAIProviderAPI(providerId, apiKey, cards) {
+async function callAIProviderAPI(providerId, apiKey, spread, cards) {
     const provider = AI_PROVIDERS[providerId];
     if (!provider) {
         throw new Error('Unsupported AI provider');
     }
 
+    const cardsText = cards.map((card, index) => (
+        `${index + 1}. ${card.name} [${card.position} / ${card.orientation}] - ${card.meaning}`
+    )).join('\n');
+
     const prompt = `你是一位精通神秘学的塔罗牌大师。请根据以下牌阵为求问者进行解读：
-    
-    牌阵：选择之仇（三张牌，代表过去/现状/未来或 处境/行动/结果）
-    1. ${cards[0]}
-    2. ${cards[1]}
-    3. ${cards[2]}
-    
-    请给出富有洞察力、温暖且指引性的简短解读（300字以内）。`;
+
+牌阵名称：${spread.name}
+牌阵说明：${spread.description}
+解析要求：${spread.interpretationGuide}
+
+牌位与抽牌结果：
+${cardsText}
+
+请按以下结构输出：
+1. 先用 2-3 句话概括整体局势。
+2. 逐张解释每个牌位的含义，必须结合该牌位职责，而不是只讲通用牌义。
+3. 最后给出 2-3 条明确建议或提醒。
+
+整体语气要温暖、具体、有洞察力，控制在 500 字以内。`;
 
     const response = await fetch(provider.endpoint, {
         method: 'POST',

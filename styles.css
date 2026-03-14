@@ -166,6 +166,16 @@ button:disabled {
     animation: fadeInDown 0.8s ease-out;
 }
 
+.spread-description {
+    max-width: 980px;
+    margin: -8px auto 20px;
+    padding: 0 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-family: 'Playfair Display', serif;
+    line-height: 1.6;
+}
+
 .select-wrapper {
     display: flex;
     align-items: center;
@@ -193,6 +203,7 @@ select:focus {
     justify-content: center;
     gap: 30px;
     width: 100%;
+    flex-wrap: wrap;
     min-height: 480px;
     /* Space for cards */
     padding: 20px 0;
@@ -217,6 +228,11 @@ select:focus {
     transition: all 0.3s ease;
 }
 
+.tarot-spread[data-card-count="5"] .card-slot {
+    width: 180px;
+    height: 306px;
+}
+
 .card-slot::before {
     content: '';
     position: absolute;
@@ -226,6 +242,28 @@ select:focus {
     box-shadow: 0 0 15px var(--accent-glow);
     opacity: 0;
     transition: opacity 0.5s;
+}
+
+.slot-placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    text-align: center;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.slot-placeholder strong {
+    color: var(--accent-gold);
+    font-size: 1.05rem;
+}
+
+.slot-placeholder span {
+    font-size: 0.9rem;
+    font-family: 'Playfair Display', serif;
 }
 
 .card-slot:not(:empty)::before {
@@ -306,6 +344,13 @@ select:focus {
     font-size: 1.2rem;
     margin-bottom: 4px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.label-position {
+    display: block;
+    color: #f1d38a;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
 }
 
 .card-label span {
@@ -473,9 +518,7 @@ select:focus {
 
     .tarot-spread {
         flex-direction: row;
-        /* Keep row */
-        flex-wrap: nowrap;
-        /* Force single row, maybe shrink? */
+        flex-wrap: wrap;
         gap: 10px;
         padding: 10px;
         justify-content: space-evenly;
@@ -493,6 +536,26 @@ select:focus {
         /* Maintain aspect ratio approx 1.7 */
         max-height: 187px;
         border-width: 1px;
+    }
+
+    .tarot-spread[data-card-count="5"] .card-slot {
+        width: 28vw;
+        max-width: 104px;
+        height: 48vw;
+        max-height: 176px;
+    }
+
+    .slot-placeholder {
+        padding: 10px 8px;
+        gap: 6px;
+    }
+
+    .slot-placeholder strong {
+        font-size: 0.8rem;
+    }
+
+    .slot-placeholder span {
+        font-size: 0.72rem;
     }
 
     .card-label {

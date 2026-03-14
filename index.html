@@ -78,22 +78,23 @@
             <div class="select-wrapper">
                 <label for="spread">选择塔罗牌阵：</label>
                 <select id="spread">
-                    <option value="1">选择之仇三张</option>
+                    <option value="timeline">时间之流三张</option>
+                    <option value="decision">抉择指引三张</option>
+                    <option value="relationship">关系洞察五张</option>
+                    <option value="career">事业路径五张</option>
                 </select>
             </div>
             <button id="draw-card" disabled>抽取塔罗牌</button>
             <button id="analyze-btn" style="display: none;" class="special-btn">🔮 AI 解读</button>
         </div>
+        <div id="spread-description" class="spread-description"></div>
 
         <div class="tarot-spread" id="tarot-container">
             <!-- Slots for the spread -->
-            <div class="card-slot" data-index="0"></div>
-            <div class="card-slot" data-index="1"></div>
-            <div class="card-slot" data-index="2"></div>
         </div>
 
         <div class="deck-area">
-            <div class="deck-instruction">请凭直觉抽取 3 张牌</div>
+            <div id="deck-instruction" class="deck-instruction">请凭直觉抽取牌</div>
             <div id="deck-container" class="deck-fan">
                 <!-- 78 Cards will be generated here by JS -->
             </div>
