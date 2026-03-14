@@ -771,102 +771,158 @@ select:focus,
 
 @media (max-width: 768px) {
     header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 14px 12px 62px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px 12px 58px;
     }
 
     h1 {
-        font-size: 1.06rem;
+        font-size: 0.98rem;
+        letter-spacing: 0.08em;
+        line-height: 1.2;
+        max-width: 124px;
     }
 
     .auth-buttons {
-        width: 100%;
+        width: auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        flex: 1;
     }
 
     button {
-        padding: 9px 14px;
-        font-size: 0.82rem;
+        padding: 10px 12px;
+        font-size: 0.78rem;
+        min-height: 42px;
     }
 
     .container {
         width: calc(100% - 16px);
-        padding-top: 18px;
+        padding-top: 14px;
     }
 
     .controls-bar {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr;
         align-items: stretch;
+        gap: 12px;
         padding: 14px;
-        border-radius: 22px;
+        border-radius: 20px;
+        margin-bottom: 14px;
     }
 
     .question-panel,
     .spread-description {
-        padding: 16px;
+        padding: 14px;
+        border-radius: 20px;
+        margin-bottom: 14px;
+    }
+
+    .select-wrapper {
+        min-width: 0;
+        flex: none;
+        width: 100%;
+        gap: 6px;
+    }
+
+    .controls-bar > button {
+        width: 100%;
     }
 
     #question-input {
-        min-height: 104px;
-        font-size: 0.96rem;
+        min-height: 96px;
+        padding: 14px;
+        font-size: 0.94rem;
+        border-radius: 14px;
+    }
+
+    .question-display {
+        margin-top: 12px;
+        padding: 12px 14px;
+        font-size: 0.9rem;
+    }
+
+    .spread-description {
+        font-size: 0.92rem;
+        line-height: 1.6;
     }
 
     .tarot-spread {
-        gap: 16px 10px;
+        gap: 14px;
         justify-content: center;
-        padding-bottom: 24px;
+        padding-bottom: 18px;
         min-height: auto;
     }
 
-    .card-slot,
+    .tarot-spread[data-card-count="3"] {
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+
+    .tarot-spread[data-card-count="3"] .card-slot {
+        width: min(70vw, 222px);
+        height: min(119vw, 376px);
+    }
+
+    .tarot-spread[data-card-count="5"] {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        justify-items: center;
+        gap: 12px 10px;
+    }
+
     .tarot-spread[data-card-count="5"] .card-slot {
-        width: calc(50% - 8px);
-        max-width: 154px;
-        height: 60vw;
-        max-height: 236px;
+        width: min(42vw, 160px);
+        height: min(71vw, 252px);
         border-radius: 18px;
     }
 
     .slot-placeholder {
         padding: 12px 10px;
+        gap: 8px;
     }
 
     .slot-placeholder strong {
-        font-size: 0.82rem;
+        font-size: 0.84rem;
     }
 
     .slot-placeholder span {
-        font-size: 0.74rem;
+        font-size: 0.76rem;
+        line-height: 1.45;
     }
 
     .card-label {
-        bottom: -62px;
+        bottom: -58px;
     }
 
     .card-label strong {
-        font-size: 0.84rem;
+        font-size: 0.82rem;
     }
 
     .label-position,
     .card-label span {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
     }
 
     .deck-area {
-        height: 290px;
+        height: 252px;
     }
 
     .deck-instruction {
-        font-size: 0.92rem;
-        margin-bottom: 10px;
+        font-size: 0.82rem;
+        margin-bottom: 8px;
+        letter-spacing: 0.06em;
     }
 
     .deck-card-wrapper {
-        width: 65px;
-        height: 110px;
-        bottom: 172px;
-        transform-origin: 50% 450px;
+        width: 58px;
+        height: 98px;
+        bottom: 148px;
+        transform-origin: 50% 390px;
     }
 
     .modal-content {
@@ -885,7 +941,45 @@ select:focus,
 
     .sidebar {
         top: 72px;
-        width: min(86vw, 320px);
+        width: min(84vw, 320px);
         height: calc(100% - 72px);
+    }
+
+    .sidebar-toggle {
+        width: 42px;
+        height: 42px;
+        top: 14px;
+        left: 12px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 420px) {
+    header {
+        padding-right: 12px;
+    }
+
+    h1 {
+        max-width: 108px;
+        font-size: 0.92rem;
+    }
+
+    .auth-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    button {
+        padding: 9px 10px;
+        font-size: 0.74rem;
+    }
+
+    .tarot-spread[data-card-count="3"] .card-slot {
+        width: min(74vw, 214px);
+        height: min(126vw, 362px);
+    }
+
+    .tarot-spread[data-card-count="5"] .card-slot {
+        width: min(43vw, 150px);
+        height: min(74vw, 238px);
     }
 }
