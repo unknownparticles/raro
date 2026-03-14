@@ -398,22 +398,78 @@ const settingsBtn = document.getElementById('settings-button');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettings = document.querySelector('.close-modal');
 const saveSettingsBtn = document.getElementById('save-settings');
-const deepseekInput = document.getElementById('deepseek-key');
+const providerSelect = document.getElementById('provider-select');
+const providerInput = document.getElementById('provider-key');
 
 const analyzeBtn = document.getElementById('analyze-btn');
 const analysisModal = document.getElementById('analysis-modal');
 const closeAnalysis = document.querySelector('.close-analysis');
 const analysisResult = document.getElementById('analysis-result');
 
-function hasDeepSeekApiKey() {
-    return Boolean(localStorage.getItem('deepseek_api_key'));
+const AI_PROVIDERS = {
+    deepseek: {
+        label: 'DeepSeek',
+        storageKey: 'provider_api_key_deepseek',
+        endpoint: 'https://api.deepseek.com/chat/completions',
+        model: 'deepseek-chat'
+    },
+    glm: {
+        label: 'GLM',
+        storageKey: 'provider_api_key_glm',
+        endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+        model: 'glm-4-flash'
+    },
+    kimi: {
+        label: 'Kimi',
+        storageKey: 'provider_api_key_kimi',
+        endpoint: 'https://api.moonshot.cn/v1/chat/completions',
+        model: 'moonshot-v1-8k'
+    }
+};
+
+function migrateLegacySettings() {
+    const legacyDeepSeekKey = localStorage.getItem('deepseek_api_key');
+    if (legacyDeepSeekKey && !localStorage.getItem(AI_PROVIDERS.deepseek.storageKey)) {
+        localStorage.setItem(AI_PROVIDERS.deepseek.storageKey, legacyDeepSeekKey);
+    }
+}
+
+function getSelectedProvider() {
+    const savedProvider = localStorage.getItem('selected_ai_provider');
+    return AI_PROVIDERS[savedProvider] ? savedProvider : 'deepseek';
+}
+
+function getProviderApiKey(providerId = getSelectedProvider()) {
+    const provider = AI_PROVIDERS[providerId];
+    if (!provider) return '';
+
+    return localStorage.getItem(provider.storageKey) || '';
+}
+
+function hasProviderApiKey(providerId = getSelectedProvider()) {
+    return Boolean(getProviderApiKey(providerId));
+}
+
+function updateProviderInput() {
+    const providerId = providerSelect.value;
+    const provider = AI_PROVIDERS[providerId];
+    if (!provider) return;
+
+    const apiKey = getProviderApiKey(providerId);
+    providerInput.value = apiKey;
+    providerInput.placeholder = providerId === 'glm' ? '填写 GLM API Key' : 'sk-...';
+
+    const label = document.querySelector('label[for="provider-key"]');
+    if (label) {
+        label.innerText = `${provider.label} API Key:`;
+    }
 }
 
 function updateAnalyzeButtonVisibility() {
     const actionBtn = document.getElementById('analyze-btn');
     if (!actionBtn) return;
 
-    const shouldShow = drawnCardsCount >= MAX_CARDS && hasDeepSeekApiKey();
+    const shouldShow = drawnCardsCount >= MAX_CARDS && hasProviderApiKey();
     actionBtn.style.display = shouldShow ? 'inline-block' : 'none';
     actionBtn.classList.toggle('visible', shouldShow);
 }
@@ -429,11 +485,12 @@ function closeModal(modal) {
 }
 
 function openSettingsModal() {
-    deepseekInput.value = localStorage.getItem('deepseek_api_key') || '';
+    providerSelect.value = getSelectedProvider();
+    updateProviderInput();
     openModal(settingsModal);
     requestAnimationFrame(() => {
-        deepseekInput.focus();
-        deepseekInput.select();
+        providerInput.focus();
+        providerInput.select();
     });
 }
 
@@ -470,13 +527,23 @@ settingsModal.addEventListener('click', (event) => {
     }
 });
 
+providerSelect.addEventListener('change', () => {
+    localStorage.setItem('selected_ai_provider', providerSelect.value);
+    updateProviderInput();
+    updateAnalyzeButtonVisibility();
+});
+
 saveSettingsBtn.addEventListener('click', () => {
-    const apiKey = deepseekInput.value.trim();
+    const providerId = providerSelect.value;
+    const provider = AI_PROVIDERS[providerId];
+    const apiKey = providerInput.value.trim();
+
+    localStorage.setItem('selected_ai_provider', providerId);
 
     if (apiKey) {
-        localStorage.setItem('deepseek_api_key', apiKey);
+        localStorage.setItem(provider.storageKey, apiKey);
     } else {
-        localStorage.removeItem('deepseek_api_key');
+        localStorage.removeItem(provider.storageKey);
     }
 
     updateAnalyzeButtonVisibility();
@@ -543,9 +610,12 @@ const newAnalyzeBtn = analyzeBtn.cloneNode(true);
 analyzeBtn.parentNode.replaceChild(newAnalyzeBtn, analyzeBtn);
 
 newAnalyzeBtn.addEventListener('click', async () => {
-    const apiKey = localStorage.getItem('deepseek_api_key');
+    const providerId = getSelectedProvider();
+    const provider = AI_PROVIDERS[providerId];
+    const apiKey = getProviderApiKey(providerId);
+
     if (!apiKey) {
-        alert('请先在设置中输入 DeepSeek API Key');
+        alert(`请先在设置中输入 ${provider.label} API Key`);
         openSettingsModal();
         return;
     }
@@ -572,7 +642,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
     analysisResult.innerHTML = '<p>🔮 正在连接高维智慧，分析牌阵中...</p>';
 
     try {
-        const interpretation = await callDeepSeekAPI(apiKey, cardsData);
+        const interpretation = await callAIProviderAPI(providerId, apiKey, cardsData);
 
         // Show Parsed Markdown
         showAnalysis(interpretation);
@@ -595,7 +665,9 @@ newAnalyzeBtn.addEventListener('click', async () => {
 const originalOnload = window.onload;
 window.onload = () => {
     if (originalOnload) originalOnload();
+    migrateLegacySettings();
     initHistory();
+    updateAnalyzeButtonVisibility();
 };
 
 closeAnalysis.addEventListener('click', () => {
@@ -603,6 +675,15 @@ closeAnalysis.addEventListener('click', () => {
 });
 
 async function callDeepSeekAPI(apiKey, cards) {
+    return callAIProviderAPI('deepseek', apiKey, cards);
+}
+
+async function callAIProviderAPI(providerId, apiKey, cards) {
+    const provider = AI_PROVIDERS[providerId];
+    if (!provider) {
+        throw new Error('Unsupported AI provider');
+    }
+
     const prompt = `你是一位精通神秘学的塔罗牌大师。请根据以下牌阵为求问者进行解读：
     
     牌阵：选择之仇（三张牌，代表过去/现状/未来或 处境/行动/结果）
@@ -612,14 +693,14 @@ async function callDeepSeekAPI(apiKey, cards) {
     
     请给出富有洞察力、温暖且指引性的简短解读（300字以内）。`;
 
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const response = await fetch(provider.endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-            model: "deepseek-chat",
+            model: provider.model,
             messages: [
                 { "role": "system", "content": "You are a helpful tarot reader." },
                 { "role": "user", "content": prompt }

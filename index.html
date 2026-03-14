@@ -47,8 +47,16 @@
             <span class="close-modal">&times;</span>
             <h2>设置</h2>
             <div class="input-group">
-                <label for="deepseek-key">DeepSeek API Key:</label>
-                <input type="password" id="deepseek-key" placeholder="sk-...">
+                <label for="provider-select">AI Provider:</label>
+                <select id="provider-select">
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="glm">GLM</option>
+                    <option value="kimi">Kimi</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="provider-key">API Key:</label>
+                <input type="password" id="provider-key" placeholder="sk-...">
             </div>
             <button id="save-settings">保存</button>
         </div>
