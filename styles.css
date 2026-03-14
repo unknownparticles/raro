@@ -18,6 +18,12 @@
     /* Prevent text selection dragging */
 }
 
+input,
+textarea,
+select {
+    user-select: text;
+}
+
 body {
     font-family: 'Cinzel', serif;
     background-color: var(--bg-dark);

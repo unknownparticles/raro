@@ -233,16 +233,7 @@ function onCardClick(e) {
         setTimeout(() => {
             const deckArea = document.querySelector('.deck-area');
             if (deckArea) deckArea.classList.add('hidden');
-
-            // Show Analyze Button ONLY if API key exists
-            const apiKey = localStorage.getItem('deepseek_api_key');
-            const analyzeBtn = document.getElementById('analyze-btn');
-
-            if (analyzeBtn && apiKey) {
-                analyzeBtn.style.display = 'inline-block';
-                // Small delay to trigger transition if we add one
-                setTimeout(() => analyzeBtn.classList.add('visible'), 10);
-            }
+            updateAnalyzeButtonVisibility();
         }, 1000);
     }
 }
@@ -414,6 +405,38 @@ const analysisModal = document.getElementById('analysis-modal');
 const closeAnalysis = document.querySelector('.close-analysis');
 const analysisResult = document.getElementById('analysis-result');
 
+function hasDeepSeekApiKey() {
+    return Boolean(localStorage.getItem('deepseek_api_key'));
+}
+
+function updateAnalyzeButtonVisibility() {
+    const actionBtn = document.getElementById('analyze-btn');
+    if (!actionBtn) return;
+
+    const shouldShow = drawnCardsCount >= MAX_CARDS && hasDeepSeekApiKey();
+    actionBtn.style.display = shouldShow ? 'inline-block' : 'none';
+    actionBtn.classList.toggle('visible', shouldShow);
+}
+
+function openModal(modal) {
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('visible'));
+}
+
+function closeModal(modal) {
+    modal.classList.remove('visible');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+}
+
+function openSettingsModal() {
+    deepseekInput.value = localStorage.getItem('deepseek_api_key') || '';
+    openModal(settingsModal);
+    requestAnimationFrame(() => {
+        deepseekInput.focus();
+        deepseekInput.select();
+    });
+}
+
 // --- Sidebar & History Logic ---
 
 const sidebar = document.getElementById('history-sidebar');
@@ -434,6 +457,31 @@ closeSidebar.addEventListener('click', () => {
 function initHistory() {
     renderHistoryList();
 }
+
+settingsBtn.addEventListener('click', openSettingsModal);
+
+closeSettings.addEventListener('click', () => {
+    closeModal(settingsModal);
+});
+
+settingsModal.addEventListener('click', (event) => {
+    if (event.target === settingsModal) {
+        closeModal(settingsModal);
+    }
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+    const apiKey = deepseekInput.value.trim();
+
+    if (apiKey) {
+        localStorage.setItem('deepseek_api_key', apiKey);
+    } else {
+        localStorage.removeItem('deepseek_api_key');
+    }
+
+    updateAnalyzeButtonVisibility();
+    closeModal(settingsModal);
+});
 
 function getHistory() {
     const history = localStorage.getItem('tarot_history');
@@ -474,8 +522,7 @@ function renderHistoryList() {
 }
 
 function showAnalysis(markdownText, isHistory = false) {
-    analysisModal.classList.remove('hidden');
-    setTimeout(() => analysisModal.classList.add('visible'), 10);
+    openModal(analysisModal);
 
     // Parse Markdown
     const htmlContent = marked.parse(markdownText);
@@ -499,7 +546,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
     const apiKey = localStorage.getItem('deepseek_api_key');
     if (!apiKey) {
         alert('请先在设置中输入 DeepSeek API Key');
-        settingsBtn.click();
+        openSettingsModal();
         return;
     }
 
@@ -521,8 +568,7 @@ newAnalyzeBtn.addEventListener('click', async () => {
     }
 
     // Show Analysis Modal with loading state
-    analysisModal.classList.remove('hidden');
-    setTimeout(() => analysisModal.classList.add('visible'), 10);
+    openModal(analysisModal);
     analysisResult.innerHTML = '<p>🔮 正在连接高维智慧，分析牌阵中...</p>';
 
     try {
@@ -553,8 +599,7 @@ window.onload = () => {
 };
 
 closeAnalysis.addEventListener('click', () => {
-    analysisModal.classList.remove('visible');
-    setTimeout(() => analysisModal.classList.add('hidden'), 300);
+    closeModal(analysisModal);
 });
 
 async function callDeepSeekAPI(apiKey, cards) {
