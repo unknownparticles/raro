@@ -129,6 +129,10 @@ let clarificationSuggestion = null;
 let clarificationRequested = false;
 let clarificationDrawn = false;
 
+function isMobileDeckMode() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
 function getSelectedSpread() {
     const spreadId = spreadSelect.value;
     return SPREADS[spreadId] || SPREADS.timeline;
@@ -325,10 +329,11 @@ function initDeck() {
     const deckContainer = document.getElementById('deck-container');
     if (!deckContainer) return;
     if (deckCardOrder.length === 0) initializeDeckOrder();
+    deckArea.classList.toggle('mobile-stack', isMobileDeckMode());
 
     deckContainer.innerHTML = '';
     const totalCards = 78;
-    // Spread cards over a smaller arc for a "fan" look
+    const isMobile = isMobileDeckMode();
     const fanAngle = 90;
     const startAngle = -fanAngle / 2;
     const angleStep = fanAngle / (totalCards - 1);
@@ -339,9 +344,20 @@ function initDeck() {
         wrapper.className = 'deck-card-wrapper';
         const angle = startAngle + (i * angleStep);
 
-        // Apply rotation to wrapper. Origin is handled by CSS.
-        wrapper.style.transform = `rotate(${angle}deg)`;
-        wrapper.dataset.baseAngle = angle; // Store base angle
+        if (isMobile) {
+            const offsetX = ((i % 5) - 2) * 2;
+            const offsetY = -Math.min(i, 14) * 0.9;
+            const tilt = ((i % 5) - 2) * 1.4;
+            const compactTransform = `translate(${offsetX}px, ${offsetY}px) rotate(${tilt}deg)`;
+            wrapper.style.transform = compactTransform;
+            wrapper.dataset.baseTransform = compactTransform;
+            wrapper.dataset.compact = 'true';
+        } else {
+            wrapper.style.transform = `rotate(${angle}deg)`;
+            wrapper.dataset.baseAngle = angle;
+            wrapper.dataset.compact = 'false';
+        }
+
         wrapper.style.zIndex = i;
 
         // Create Inner Card
@@ -368,6 +384,7 @@ function initDeck() {
 
     // Mouse Events
     deckArea.addEventListener('mousedown', (e) => {
+        if (isMobileDeckMode()) return;
         isDragging = true;
         deckArea.classList.add('is-dragging');
         startX = e.clientX;
@@ -375,6 +392,7 @@ function initDeck() {
     });
 
     window.addEventListener('mousemove', (e) => {
+        if (isMobileDeckMode()) return;
         if (!isDragging) return;
         const deltaX = e.clientX - startX;
         const rotationDelta = deltaX * 0.2;
@@ -383,6 +401,7 @@ function initDeck() {
     });
 
     window.addEventListener('mouseup', () => {
+        if (isMobileDeckMode()) return;
         if (isDragging) {
             isDragging = false;
             deckArea.classList.remove('is-dragging');
@@ -393,12 +412,14 @@ function initDeck() {
 
     // Touch Events
     deckArea.addEventListener('touchstart', (e) => {
+        if (isMobileDeckMode()) return;
         isDragging = true;
         deckArea.classList.add('is-dragging');
         startX = e.touches[0].clientX;
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
+        if (isMobileDeckMode()) return;
         if (!isDragging) return;
         const deltaX = e.touches[0].clientX - startX;
         const rotationDelta = deltaX * 0.2;
@@ -407,6 +428,7 @@ function initDeck() {
     }, { passive: true });
 
     window.addEventListener('touchend', () => {
+        if (isMobileDeckMode()) return;
         isDragging = false;
         deckArea.classList.remove('is-dragging');
         previousRotation = currentRotation;
@@ -418,6 +440,11 @@ function initDeck() {
 function applyDeckRotation(rotationOffset) {
     const wrappers = document.querySelectorAll('.deck-card-wrapper');
     wrappers.forEach(wrapper => {
+        if (wrapper.dataset.compact === 'true') {
+            wrapper.style.transform = wrapper.dataset.baseTransform;
+            return;
+        }
+
         const baseAngle = parseFloat(wrapper.dataset.baseAngle);
         wrapper.style.transform = `rotate(${baseAngle + rotationOffset}deg)`;
     });
