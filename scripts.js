@@ -216,6 +216,13 @@ function applyDeckRotation(rotationOffset) {
     });
 }
 
+function getCardImageSources(imageIndex) {
+    return {
+        primary: `tarot_images/Tarot_Card_${imageIndex}.webp`,
+        fallback: `tarot_images/Tarot_Card_${imageIndex}.png`
+    };
+}
+
 function clearPreSelectedCard() {
     if (preSelectedCard) {
         preSelectedCard.classList.remove('pre-selected');
@@ -330,21 +337,18 @@ function generateAndPlaceCard(slot) {
     // Use the 1-78 numbered naming convention
     // randomIndex is 0-77, so we add 1 to get 1-78
     const imageIndex = randomIndex + 1;
-    img.src = `tarot_images/Tarot_Card_${imageIndex}.png`;
+    const imageSources = getCardImageSources(imageIndex);
+    img.src = imageSources.primary;
     img.alt = cardName;
-
-    if (isReversed) {
-        img.style.transform = 'rotate(180deg)';
-    }
-
-    const chineseName = tarotTranslations[cardName] || cardName;
-    const positionText = isReversed ? '逆位' : '正位';
-
-    img.onload = () => {
-        cardFront.appendChild(img);
-    };
+    img.decoding = 'async';
+    img.fetchPriority = 'high';
 
     img.onerror = () => {
+        if (img.src.endsWith('.webp')) {
+            img.src = imageSources.fallback;
+            return;
+        }
+
         const fallbackDiv = document.createElement('div');
         fallbackDiv.className = 'card-fallback';
 
@@ -358,6 +362,17 @@ function generateAndPlaceCard(slot) {
         fallbackDiv.appendChild(reversedLabel);
 
         cardFront.appendChild(fallbackDiv);
+    };
+
+    if (isReversed) {
+        img.style.transform = 'rotate(180deg)';
+    }
+
+    const chineseName = tarotTranslations[cardName] || cardName;
+    const positionText = isReversed ? '逆位' : '正位';
+
+    img.onload = () => {
+        cardFront.appendChild(img);
     };
 
     cardInner.appendChild(cardBack);

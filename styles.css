@@ -268,7 +268,7 @@ select:focus {
 
 .card-back {
     background: #111;
-    background-image: url('tarot_images/Background.png');
+    background-image: url('tarot_images/Background.webp');
     background-size: 100% 100%;
 }
 
@@ -396,7 +396,7 @@ select:focus {
     position: relative;
     width: 100%;
     height: 100%;
-    background-image: url('tarot_images/Background.png');
+    background-image: url('tarot_images/Background.webp');
     background-size: 100% 100%;
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -426,7 +426,7 @@ select:focus {
     position: fixed;
     width: 90px;
     height: 153px;
-    background-image: url('tarot_images/Background.png');
+    background-image: url('tarot_images/Background.webp');
     background-size: 100% 100%;
     border-radius: 6px;
     z-index: 200;
