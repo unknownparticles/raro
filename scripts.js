@@ -757,13 +757,23 @@ function updateAnalyzeButtonVisibility() {
 }
 
 function openModal(modal) {
+    if (modal.hideTimer) {
+        clearTimeout(modal.hideTimer);
+        modal.hideTimer = null;
+    }
     modal.classList.remove('hidden');
     requestAnimationFrame(() => modal.classList.add('visible'));
 }
 
 function closeModal(modal) {
     modal.classList.remove('visible');
-    setTimeout(() => modal.classList.add('hidden'), 300);
+    if (modal.hideTimer) {
+        clearTimeout(modal.hideTimer);
+    }
+    modal.hideTimer = setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.hideTimer = null;
+    }, 300);
 }
 
 function openSettingsModal() {
