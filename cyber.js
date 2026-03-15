@@ -707,7 +707,9 @@ async function analyzeReading() {
         fistHoldStartedAt = 0;
         setResetArming(false);
         gestureStatus.textContent = '解析结束：张手上下滚动；握拳 2 秒确认重置，松手取消';
-        analysisGestureHint.textContent = '结果页：张手上下滚动；握拳 2 秒确认重置，松手取消；两手矩形复制';
+        if (analysisGestureHint) {
+            analysisGestureHint.textContent = '结果页：张手上下滚动；握拳 2 秒确认重置，松手取消；两手矩形复制';
+        }
         const now = new Date();
         saveHistory({
             date: now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
@@ -722,7 +724,9 @@ async function analyzeReading() {
         fistHoldStartedAt = 0;
         setResetArming(false);
         gestureStatus.textContent = '解析结束：张手上下滚动；握拳 2 秒确认重置，松手取消';
-        analysisGestureHint.textContent = '结果页：张手上下滚动；握拳 2 秒确认重置，松手取消；两手矩形复制';
+        if (analysisGestureHint) {
+            analysisGestureHint.textContent = '结果页：张手上下滚动；握拳 2 秒确认重置，松手取消；两手矩形复制';
+        }
         const now = new Date();
         saveHistory({
             date: now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
