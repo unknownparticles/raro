@@ -74,6 +74,8 @@ const {
     callProvider
 } = window.TarotAIShared;
 
+const bootLoading = document.getElementById('boot-loading');
+const bootLoadingStatus = document.getElementById('boot-loading-status');
 const spreadSelect = document.getElementById('spread-select');
 const spreadGrid = document.getElementById('spread-grid');
 const spreadCards = Array.from(document.querySelectorAll('.spread-card'));
@@ -253,6 +255,14 @@ function updateProviderUI() {
     const provider = AI_PROVIDERS[providerId];
     providerInput.value = getProviderApiKey(providerId);
     providerHelp.innerHTML = `<strong>${provider.label}</strong><br>${provider.keyHint}<br><a href="${provider.keyUrl}" target="_blank" rel="noopener noreferrer">${provider.keyUrl}</a>`;
+}
+
+function setBootStatus(text) {
+    if (bootLoadingStatus) bootLoadingStatus.textContent = text;
+}
+
+function finishBoot() {
+    document.body.classList.add('app-ready');
 }
 
 function applyMirrorState() {
@@ -666,9 +676,22 @@ async function analyzeReading() {
         pendingAnalyzeAfterSettings = true;
         analysisResult.innerHTML = `
             ${buildCardsOverviewHtml()}
-            <p>已抽牌完成，但当前还没有配置 <strong>${escapeHtml(provider.label)}</strong> 的 API Key。</p>
-            <p>先去设置里填写 Key，保存后会自动继续解析，不会卡在这里。</p>
-            <button type="button" class="primary-button secondary-button" data-open-settings>去设置填写 API Key</button>
+            <section class="analysis-guide-card">
+                <p class="analysis-guide-eyebrow">System Guide</p>
+                <h3>还差一步，先完成 AI 设置</h3>
+                <p>牌已经抽完了，但当前还没有配置 <strong>${escapeHtml(provider.label)}</strong> 的 API Key，所以暂时不能生成解读。</p>
+                <ul class="analysis-guide-steps">
+                    <li>
+                        <span class="analysis-guide-step-index">1</span>
+                        <span>打开设置，填写当前 Provider 的 API Key。</span>
+                    </li>
+                    <li>
+                        <span class="analysis-guide-step-index">2</span>
+                        <span>点击保存，系统会自动回到这里继续解析，不需要重新抽牌。</span>
+                    </li>
+                </ul>
+                <button type="button" class="primary-button secondary-button" data-open-settings>打开设置并填写 API Key</button>
+            </section>
         `;
         gestureStatus.textContent = '未配置 API Key，请先在设置里填写后继续解析';
         openModal(analysisModal);
@@ -1437,38 +1460,69 @@ async function loadGestureAssets() {
 }
 
 async function startGestureControl() {
+    setBootStatus('正在同时申请摄像头和麦克风权限...');
     gestureStatus.textContent = '连接摄像头中';
     if (!navigator.mediaDevices?.getUserMedia) {
+        setBootStatus('当前浏览器不支持媒体设备访问');
         gestureStatus.textContent = '浏览器不支持摄像头';
         return;
     }
 
     try {
         if (!gestureStream) {
-            gestureStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            });
+            try {
+                gestureStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+                voiceStatus.textContent = '麦克风权限已准备，可直接输入或语音提问';
+            } catch (error) {
+                debugLog('media_request_failed', {
+                    mode: 'audio+video',
+                    name: error?.name || 'unknown',
+                    message: error?.message || ''
+                });
+                if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
+                    throw error;
+                }
+                setBootStatus('麦克风不可用，继续初始化摄像头...');
+                voiceStatus.textContent = '麦克风未就绪，后续请手动输入问题';
+                gestureStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                });
+            }
         }
 
+        setBootStatus('摄像头已连接，正在准备视频流...');
         gestureVideo.srcObject = gestureStream;
         await gestureVideo.play();
         await waitForVideoReady(gestureVideo);
 
         if (gestureVideo.videoWidth <= 0 || gestureVideo.videoHeight <= 0) {
+            setBootStatus('摄像头已连接，但视频未就绪');
             gestureStatus.textContent = '摄像头已连接，但视频未就绪';
             return;
         }
 
         gestureOverlay.width = gestureVideo.videoWidth || 320;
         gestureOverlay.height = gestureVideo.videoHeight || 240;
+        setBootStatus('摄像头已连接，正在加载手势识别...');
         gestureStatus.textContent = '摄像头已连接，加载识别中';
 
         await loadGestureAssets();
+        setBootStatus('初始化完成');
         gestureStatus.textContent = '手势已连接';
 
         const loop = () => {
@@ -1506,18 +1560,22 @@ async function startGestureControl() {
         if (!gestureLoopId) gestureLoopId = requestAnimationFrame(loop);
     } catch (error) {
         if (error?.name === 'NotAllowedError') {
+            setBootStatus('权限被拒绝，请允许摄像头和麦克风访问');
             gestureStatus.textContent = '摄像头权限被拒绝';
             return;
         }
         if (error?.name === 'NotFoundError') {
+            setBootStatus('未找到可用摄像头');
             gestureStatus.textContent = '未找到可用摄像头';
             return;
         }
         const message = typeof error?.message === 'string' ? error.message : '';
         if (message.includes('storage.googleapis') || message.includes('Failed to fetch') || message.includes('fetch')) {
+            setBootStatus('手势模型加载失败，可能是网络拦截');
             gestureStatus.textContent = '手势模型加载失败，可能是网络拦截';
             return;
         }
+        setBootStatus('初始化失败，可改用触控');
         gestureStatus.textContent = '手势不可用，可直接触控';
     }
 }
@@ -1557,7 +1615,8 @@ deckStage.addEventListener('pointercancel', () => {
 
 window.addEventListener('beforeunload', stopGestureControl);
 
-function init() {
+async function init() {
+    setBootStatus('正在初始化赛博模式...');
     const savedSpread = localStorage.getItem('selected_tarot_spread');
     if (savedSpread && SPREADS[savedSpread]) spreadSelect.value = savedSpread;
     providerSelect.value = getSelectedProvider();
@@ -1569,10 +1628,12 @@ function init() {
     renderPickedCards();
     updateSelectionStatus();
     if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-        startGestureControl();
+        await startGestureControl();
     } else {
+        setBootStatus('请在 HTTPS 或 localhost 下使用摄像头');
         gestureStatus.textContent = '请在 HTTPS 或 localhost 下使用摄像头';
     }
+    window.setTimeout(finishBoot, 240);
 }
 
 init();
