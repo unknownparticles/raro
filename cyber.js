@@ -148,7 +148,6 @@ let isSpeechUnavailable = false;
 let copyGestureCooldownUntil = 0;
 let fistHoldStartedAt = 0;
 let fistHoldLostAt = 0;
-let fistHoldLostAt = 0;
 
 const SPEECH_LANGUAGE_CANDIDATES = ['zh-CN', navigator.language || 'en-US', 'en-US']
     .filter((value, index, array) => value && array.indexOf(value) === index);
