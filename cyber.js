@@ -82,7 +82,6 @@ const questionShell = document.getElementById('question-shell');
 const introTitle = document.getElementById('intro-title');
 const introSubtitle = document.getElementById('intro-subtitle');
 const phaseHint = document.getElementById('phase-hint');
-const mirrorButton = document.getElementById('mirror-button');
 const voiceButton = document.getElementById('voice-button');
 const startButton = document.getElementById('start-button');
 const analyzeButton = document.getElementById('analyze-button');
@@ -99,6 +98,7 @@ const analysisGestureHint = document.getElementById('analysis-gesture-hint');
 const analysisResult = document.getElementById('analysis-result');
 const providerSelect = document.getElementById('provider-select');
 const providerInput = document.getElementById('provider-key');
+const mirrorToggle = document.getElementById('mirror-toggle');
 const providerHelp = document.getElementById('provider-help');
 const saveSettings = document.getElementById('save-settings');
 const gestureVideo = document.getElementById('gesture-video');
@@ -148,6 +148,7 @@ let isSpeechUnavailable = false;
 let copyGestureCooldownUntil = 0;
 let fistHoldStartedAt = 0;
 let fistHoldLostAt = 0;
+let pendingAnalyzeAfterSettings = false;
 
 const SPEECH_LANGUAGE_CANDIDATES = ['zh-CN', navigator.language || 'en-US', 'en-US']
     .filter((value, index, array) => value && array.indexOf(value) === index);
@@ -257,7 +258,7 @@ function updateProviderUI() {
 function applyMirrorState() {
     gestureVideo.classList.toggle('is-mirrored', isMirroredPreview);
     gestureOverlay.classList.toggle('is-mirrored', isMirroredPreview);
-    mirrorButton.textContent = isMirroredPreview ? '关闭镜像' : '镜像预览';
+    if (mirrorToggle) mirrorToggle.checked = isMirroredPreview;
 }
 
 function debugLog(event, detail) {
@@ -607,6 +608,7 @@ document.querySelectorAll('[data-close]').forEach(button => {
 settingsButton.addEventListener('click', () => {
     providerSelect.value = getSelectedProvider();
     updateProviderUI();
+    applyMirrorState();
     openModal(settingsModal);
 });
 
@@ -619,7 +621,14 @@ saveSettings.addEventListener('click', () => {
     const providerId = providerSelect.value;
     localStorage.setItem('selected_ai_provider', providerId);
     setProviderApiKey(providerId, providerInput.value.trim());
+    isMirroredPreview = Boolean(mirrorToggle?.checked);
+    localStorage.setItem('cyber_mirror_preview', isMirroredPreview ? 'on' : 'off');
+    applyMirrorState();
     closeModal('settings-modal');
+    if (pendingAnalyzeAfterSettings && getProviderApiKey(providerId)) {
+        pendingAnalyzeAfterSettings = false;
+        analyzeReading();
+    }
 });
 
 spreadSelect.addEventListener('change', () => {
@@ -654,20 +663,15 @@ async function analyzeReading() {
     const prompt = `你是一位精通神秘学的塔罗牌大师。请根据以下牌阵进行解读。\n\n问题：${questionInput.value.trim()}\n牌阵：${spread.name}\n说明：${spread.description}\n抽牌结果：\n${cardsText}\n\n请输出 Markdown，包含：整体局势、逐张解析、建议提醒。控制在 500 字内。`;
 
     if (!apiKey) {
-        const fallbackMarkdown = `## 抽牌结果\n\n问题：${questionInput.value.trim()}\n\n牌阵：${getSpread().name}\n\n抽到的牌：${getCyberCardsText()}\n\n当前未配置 API Key，无法自动生成 AI 解读。`;
-        analysisResult.innerHTML = `${buildCardsOverviewHtml()}<p>已抽牌完成。当前未配置 API Key，无法自动生成 AI 解读。</p>`;
-        hasAnalysisResult = true;
-        setFlowStage('result');
-        fistHoldStartedAt = 0;
-        setResetArming(false);
-        gestureStatus.textContent = '解析结束：张手上下滚动；握拳 2 秒确认重置，松手取消';
-        analysisGestureHint.textContent = '结果页：张手上下滚动；握拳 2 秒确认重置，松手取消；两手矩形复制';
-        const now = new Date();
-        saveHistory({
-            date: now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-            summary: `问题：${questionInput.value.trim()} · ${getSpread().name} · 赛博模式`,
-            result: fallbackMarkdown
-        });
+        pendingAnalyzeAfterSettings = true;
+        analysisResult.innerHTML = `
+            ${buildCardsOverviewHtml()}
+            <p>已抽牌完成，但当前还没有配置 <strong>${escapeHtml(provider.label)}</strong> 的 API Key。</p>
+            <p>先去设置里填写 Key，保存后会自动继续解析，不会卡在这里。</p>
+            <button type="button" class="primary-button secondary-button" data-open-settings>去设置填写 API Key</button>
+        `;
+        gestureStatus.textContent = '未配置 API Key，请先在设置里填写后继续解析';
+        openModal(analysisModal);
         isAnalyzing = false;
         return;
     }
@@ -708,6 +712,15 @@ async function analyzeReading() {
 }
 
 analyzeButton.addEventListener('click', analyzeReading);
+analysisModal.addEventListener('click', event => {
+    const target = event.target.closest('[data-open-settings]');
+    if (!target) return;
+    closeModal('analysis-modal');
+    providerSelect.value = getSelectedProvider();
+    updateProviderUI();
+    applyMirrorState();
+    openModal(settingsModal);
+});
 
 function initSpeechRecognition() {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -838,11 +851,6 @@ function toggleVoiceInput(forceStart = false) {
 }
 
 voiceButton.addEventListener('click', toggleVoiceInput);
-mirrorButton.addEventListener('click', () => {
-    isMirroredPreview = !isMirroredPreview;
-    localStorage.setItem('cyber_mirror_preview', isMirroredPreview ? 'on' : 'off');
-    applyMirrorState();
-});
 spreadGrid.addEventListener('click', event => {
     const target = event.target.closest('.spread-card');
     if (!target) return;

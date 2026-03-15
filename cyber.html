@@ -59,7 +59,6 @@
                 <textarea id="question-input" rows="3" placeholder="例如：我接下来更适合什么类型的工作？" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"></textarea>
                 <div class="intro-actions">
                     <button id="voice-button" class="ghost-button" type="button">语音输入</button>
-                    <button id="mirror-button" class="ghost-button" type="button">镜像预览</button>
                     <button id="start-button" class="primary-button" type="button">开始抽牌</button>
                 </div>
                 <div class="intro-status">
@@ -99,6 +98,10 @@
             </select>
             <label for="provider-key">API Key</label>
             <input id="provider-key" type="password" placeholder="sk-..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
+            <label class="settings-switch" for="mirror-toggle">
+                <input id="mirror-toggle" type="checkbox">
+                <span>前置镜像预览</span>
+            </label>
             <div id="provider-help" class="provider-help"></div>
             <button id="save-settings" class="primary-button block-button" type="button">保存设置</button>
         </div>
